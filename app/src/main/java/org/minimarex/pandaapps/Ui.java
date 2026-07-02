@@ -1,0 +1,86 @@
+package org.minimarex.pandaapps;
+
+import android.content.Context;
+import android.graphics.drawable.GradientDrawable;
+import android.util.TypedValue;
+import android.view.Gravity;
+import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.LinearLayout;
+import android.widget.TextView;
+
+/** Tiny programmatic-UI helpers so the store list stays readable. */
+public final class Ui {
+
+    private Ui() {}
+
+    public static int dp(Context c, float v) {
+        return Math.round(TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, v,
+                c.getResources().getDisplayMetrics()));
+    }
+
+    public static GradientDrawable rounded(int fill, int stroke, float radiusDp, Context c) {
+        GradientDrawable g = new GradientDrawable();
+        g.setColor(fill);
+        g.setCornerRadius(dp(c, radiusDp));
+        if (stroke != 0) g.setStroke(dp(c, 1.5f), stroke);
+        return g;
+    }
+
+    public static LinearLayout col(Context c) {
+        LinearLayout l = new LinearLayout(c);
+        l.setOrientation(LinearLayout.VERTICAL);
+        return l;
+    }
+
+    public static LinearLayout row(Context c) {
+        LinearLayout l = new LinearLayout(c);
+        l.setOrientation(LinearLayout.HORIZONTAL);
+        l.setGravity(Gravity.CENTER_VERTICAL);
+        return l;
+    }
+
+    public static LinearLayout card(Context c) {
+        LinearLayout l = row(c);
+        l.setBackground(rounded(Theme.PANEL, Theme.BORDER, 10, c));
+        int p = dp(c, 12);
+        l.setPadding(p, p, p, p);
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        lp.bottomMargin = dp(c, 10);
+        l.setLayoutParams(lp);
+        return l;
+    }
+
+    public static TextView text(Context c, String s, int color, float sp, boolean bold) {
+        TextView t = new TextView(c);
+        t.setText(s);
+        t.setTextColor(color);
+        t.setTextSize(sp);
+        if (bold) t.setTypeface(t.getTypeface(), android.graphics.Typeface.BOLD);
+        return t;
+    }
+
+    public static Button button(Context c, String s, int bg, int fg) {
+        Button b = new Button(c);
+        b.setText(s);
+        b.setAllCaps(true);
+        b.setTextColor(fg);
+        b.setTextSize(12);
+        b.setTypeface(b.getTypeface(), android.graphics.Typeface.BOLD);
+        b.setBackground(rounded(bg, 0, 7, c));
+        b.setPadding(dp(c, 16), dp(c, 8), dp(c, 16), dp(c, 8));
+        b.setMinWidth(dp(c, 92));
+        b.setMinHeight(0);
+        b.setMinimumHeight(0);
+        return b;
+    }
+
+    public static TextView badge(Context c, String s, int fg, int bg) {
+        TextView t = text(c, s.toUpperCase(), fg, 9, true);
+        t.setLetterSpacing(0.08f);
+        t.setBackground(rounded(bg, 0, 4, c));
+        t.setPadding(dp(c, 7), dp(c, 3), dp(c, 7), dp(c, 3));
+        return t;
+    }
+}
