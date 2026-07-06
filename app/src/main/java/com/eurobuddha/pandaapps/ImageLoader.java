@@ -1,4 +1,4 @@
-package org.minimarex.pandaapps;
+package com.eurobuddha.pandaapps;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;

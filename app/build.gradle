@@ -3,15 +3,15 @@ plugins {
 }
 
 android {
-    namespace 'org.minimarex.pandaapps'
+    namespace 'com.eurobuddha.pandaapps'
     compileSdk 36
 
     defaultConfig {
-        applicationId "org.minimarex.pandaapps"
+        applicationId "com.eurobuddha.pandaapps"
         minSdk 28
         targetSdk 35
-        versionCode 104
-        versionName "0.1.4"
+        versionCode 200
+        versionName "0.2.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }

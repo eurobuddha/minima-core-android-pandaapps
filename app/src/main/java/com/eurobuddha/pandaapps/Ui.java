@@ -1,4 +1,4 @@
-package org.minimarex.pandaapps;
+package com.eurobuddha.pandaapps;
 
 import android.content.Context;
 import android.graphics.drawable.GradientDrawable;

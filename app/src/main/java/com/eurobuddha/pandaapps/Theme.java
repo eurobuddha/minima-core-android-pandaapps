@@ -1,4 +1,4 @@
-package org.minimarex.pandaapps;
+package com.eurobuddha.pandaapps;
 
 /** Design-token colours (match res/values/colors.xml). Single dark theme. */
 public final class Theme {
