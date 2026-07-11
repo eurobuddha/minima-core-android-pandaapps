@@ -157,8 +157,13 @@ public class MainActivity extends AppCompatActivity {
         // copy, so we DOWNLOAD them to the user's Downloads to install manually instead of Install/Update.
         boolean official = !"PandaApps".equals(app.source);
         boolean busy = downloading.contains(app.packageId);
+        // Official (foreign-signed) apps: a FIRST-TIME install works fine through the in-app installer —
+        // signatures only block an in-place UPDATE over an existing, differently-signed copy. So only route
+        // to the manual "download to Downloads" path when UPDATING an already-installed official app; a
+        // fresh install uses the normal direct installer (the flow that worked before minimaCore stopped
+        // installing).
         String base = (installed && !update) ? "Open"
-                : (official ? "Download" : (installed ? "Update" : "Install"));
+                : (official && installed ? "Download" : (installed ? "Update" : "Install"));
         boolean accent = !base.equals("Open");
         String label = busy ? progressLabel(app.packageId) : base;
         int bg = busy ? Theme.PANEL2 : (accent ? Theme.ACCENT : Theme.PANEL2);
