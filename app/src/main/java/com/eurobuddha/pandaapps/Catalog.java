@@ -25,7 +25,7 @@ public final class Catalog {
             "https://raw.githubusercontent.com/eurobuddha/minima-core-apks/main/apks.json";
 
     public interface Cb {
-        void onCatalog(List<AppEntry> apps);
+        void onCatalog(List<AppEntry> apps, String disclaimer);
         void onError(String message);
     }
 
@@ -43,6 +43,7 @@ public final class Catalog {
             }
             try {
                 JSONObject root = new JSONObject(json);
+                final String disclaimer = root.optString("disclaimer", "");   // store-wide dev/use-at-own-risk notice
                 JSONArray arr = root.optJSONArray("apps");
                 List<AppEntry> apps = new ArrayList<>();
                 if (arr != null) {
@@ -51,7 +52,7 @@ public final class Catalog {
                         if (o != null) apps.add(AppEntry.from(o));
                     }
                 }
-                main.post(() -> cb.onCatalog(apps));
+                main.post(() -> cb.onCatalog(apps, disclaimer));
             } catch (Exception e) {
                 main.post(() -> cb.onError(friendly(e)));
             }

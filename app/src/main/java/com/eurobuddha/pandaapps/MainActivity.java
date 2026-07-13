@@ -33,6 +33,7 @@ public class MainActivity extends AppCompatActivity {
     private TextView status;
     private final List<AppEntry> apps = new ArrayList<>();
     private boolean loaded = false;
+    private String disclaimer = "";   // store-wide "in development / use at own risk" banner (from the catalog)
     // Downloads in progress, keyed by packageId — survives re-renders so we never start a second
     // writer for the same app, and the current card's button always reflects live progress.
     private final Set<String> downloading = new HashSet<>();
@@ -69,9 +70,10 @@ public class MainActivity extends AppCompatActivity {
     private void fetch() {
         showStatus("Loading apps…");
         Catalog.fetch(new Catalog.Cb() {
-            @Override public void onCatalog(List<AppEntry> list) {
+            @Override public void onCatalog(List<AppEntry> list, String disc) {
                 apps.clear();
                 apps.addAll(list);
+                disclaimer = disc == null ? "" : disc;
                 loaded = true;
                 hideStatus();
                 render();
@@ -85,6 +87,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void render() {
         container.removeAllViews();
+        if (!disclaimer.isEmpty()) container.addView(disclaimerBanner());
         renderGroup("YOUR APPS", "PandaApps");
         renderGroup("OFFICIAL MINIMA", "Official");
         // Anything with an unexpected source goes under a catch-all.
@@ -110,6 +113,21 @@ public class MainActivity extends AppCompatActivity {
         t.setLetterSpacing(0.12f);
         t.setPadding(Ui.dp(this, 2), Ui.dp(this, 8), 0, Ui.dp(this, 8));
         return t;
+    }
+
+    /** A store-wide "in development / use at your own risk" banner shown at the top of the list. */
+    private LinearLayout disclaimerBanner() {
+        LinearLayout b = Ui.col(this);
+        int amber = 0xFFE0A93A;
+        b.setBackground(Ui.rounded(0x22E0A93A, amber, 10, this));   // faint amber fill + amber stroke
+        int p = Ui.dp(this, 12);
+        b.setPadding(p, p, p, p);
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        lp.bottomMargin = Ui.dp(this, 12);
+        b.setLayoutParams(lp);
+        b.addView(Ui.text(this, disclaimer, Theme.TEXT, 12, false));
+        return b;
     }
 
     private LinearLayout card(AppEntry app) {
