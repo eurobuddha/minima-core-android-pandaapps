@@ -24,6 +24,27 @@ public final class Catalog {
     private static final String RAW_URL =
             "https://raw.githubusercontent.com/eurobuddha/minima-core-apks/main/apks.json";
 
+    // IPFS fallbacks — keep the store working if GitHub is unreachable (outage / blocked).
+    // The IPFS snapshot's apks.json carries RELATIVE file/icon paths, so entries loaded from an
+    // IPFS source are resolved against that gateway's base. Own gateway first (fast — DNSLink is
+    // instant on the publisher), then a public gateway (survives the Pi / home line being down).
+    private static final String IPFS_OWN_BASE    = "https://ipfs.eurobuddha.com/";
+    private static final String IPFS_PUBLIC_BASE = "https://ipfs.io/ipns/ipfs.eurobuddha.com/";
+
+    /** A catalog source: where to GET it, whether it's the GitHub API, and the base to resolve
+     *  relative file/icon paths against ("" = entries are already absolute, e.g. GitHub). */
+    private static final class Src {
+        final String url; final boolean api; final String base;
+        Src(String url, boolean api, String base) { this.url = url; this.api = api; this.base = base; }
+    }
+
+    private static final Src[] SOURCES = new Src[] {
+        new Src(API_URL, true,  ""),                                            // GitHub API — near-real-time
+        new Src(RAW_URL, false, ""),                                            // GitHub raw CDN — ~5 min lag
+        new Src(IPFS_OWN_BASE    + "apks/apks.json", false, IPFS_OWN_BASE),     // own IPFS gateway
+        new Src(IPFS_PUBLIC_BASE + "apks/apks.json", false, IPFS_PUBLIC_BASE)   // public IPFS gateway
+    };
+
     public interface Cb {
         void onCatalog(List<AppEntry> apps, String disclaimer);
         void onError(String message);
@@ -34,13 +55,14 @@ public final class Catalog {
     public static void fetch(Cb cb) {
         final Handler main = new Handler(Looper.getMainLooper());
         new Thread(() -> {
-            String json;
-            try {
-                json = get(API_URL, true);          // primary: near-real-time
-            } catch (Exception apiErr) {
-                try { json = get(RAW_URL, false); }  // fallback: raw CDN (may lag ~5 min)
-                catch (Exception rawErr) { main.post(() -> cb.onError(friendly(rawErr))); return; }
+            String json = null, base = "";
+            Exception last = null;
+            for (Src s : SOURCES) {                       // first source that answers wins
+                try { json = get(s.url, s.api); base = s.base; last = null; break; }
+                catch (Exception e) { last = e; }         // try the next fallback
             }
+            if (json == null) { final Exception fe = last; main.post(() -> cb.onError(friendly(fe))); return; }
+            final String fbase = base;
             try {
                 JSONObject root = new JSONObject(json);
                 final String disclaimer = root.optString("disclaimer", "");   // store-wide dev/use-at-own-risk notice
@@ -49,14 +71,29 @@ public final class Catalog {
                 if (arr != null) {
                     for (int i = 0; i < arr.length(); i++) {
                         JSONObject o = arr.optJSONObject(i);
-                        if (o != null) apps.add(AppEntry.from(o));
+                        if (o == null) continue;
+                        AppEntry a = AppEntry.from(o);
+                        a.file = absUrl(fbase, a.file);   // no-op for absolute GitHub URLs; resolves IPFS-relative paths
+                        a.icon = absUrl(fbase, a.icon);
+                        apps.add(a);
                     }
                 }
-                main.post(() -> cb.onCatalog(apps, disclaimer));
+                final List<AppEntry> fapps = apps;
+                main.post(() -> cb.onCatalog(fapps, disclaimer));
             } catch (Exception e) {
                 main.post(() -> cb.onError(friendly(e)));
             }
         }).start();
+    }
+
+    /** Resolve a possibly-relative catalog URL against the source gateway base. Absolute URLs
+     *  (http/https/data:/ipfs:) are returned unchanged; blanks pass through. */
+    private static String absUrl(String base, String u) {
+        if (u == null || u.isEmpty()) return u;
+        if (u.startsWith("http://") || u.startsWith("https://")
+                || u.startsWith("data:") || u.startsWith("ipfs://")) return u;
+        if (base == null || base.isEmpty()) return u;
+        return base + (u.startsWith("/") ? u.substring(1) : u);
     }
 
     private static String get(String url, boolean api) throws Exception {
