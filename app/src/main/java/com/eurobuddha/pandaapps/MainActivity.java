@@ -147,7 +147,13 @@ public class MainActivity extends AppCompatActivity {
         mid.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
 
         LinearLayout titleRow = Ui.row(this);
-        titleRow.addView(Ui.text(this, app.name, Theme.TEXT, 15, true));
+        titleRow.setGravity(android.view.Gravity.CENTER_VERTICAL);
+        // Name gets weight-1 (wraps if long) so a long name can never push the
+        // version label off the row (bit the "Minima Core — New UI (Preview)" entry)
+        TextView name = Ui.text(this, app.name, Theme.TEXT, 15, true);
+        name.setLayoutParams(new LinearLayout.LayoutParams(
+                0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
+        titleRow.addView(name);
         TextView ver = Ui.text(this, "  v" + app.version, Theme.DIM, 12, false);
         titleRow.addView(ver);
         mid.addView(titleRow);
