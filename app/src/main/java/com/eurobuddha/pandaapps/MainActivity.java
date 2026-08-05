@@ -158,11 +158,17 @@ public class MainActivity extends AppCompatActivity {
         titleRow.addView(ver);
         mid.addView(titleRow);
 
-        long inst = PackageUtil.installedVersionCode(this, app.packageId);
-        String state = inst < 0 ? "Not installed"
+        // A non-.apk file (e.g. an AI skill zip, or a desktop .dmg/.exe) is a plain download, not an
+        // Android package — never route it through the package installer.
+        boolean isApk = app.file != null && app.file.toLowerCase().endsWith(".apk");
+        long inst = isApk ? PackageUtil.installedVersionCode(this, app.packageId) : -1;
+        String state = !isApk ? ""
+                : (inst < 0 ? "Not installed"
                 : (app.versionCode > inst ? "Installed v" + PackageUtil.installedVersionName(this, app.packageId) + " · update available"
-                                          : "Installed · up to date");
-        TextView meta = Ui.text(this, (app.category.isEmpty() ? "" : app.category + "  ·  ") + state,
+                                          : "Installed · up to date"));
+        String metaText = app.category.isEmpty() ? state
+                : (state.isEmpty() ? app.category : app.category + "  ·  " + state);
+        TextView meta = Ui.text(this, metaText,
                 inst >= 0 && app.versionCode <= inst ? Theme.GREEN : Theme.DIM, 11, false);
         meta.setPadding(0, Ui.dp(this, 2), 0, 0);
         mid.addView(meta);
@@ -186,7 +192,8 @@ public class MainActivity extends AppCompatActivity {
         // to the manual "download to Downloads" path when UPDATING an already-installed official app; a
         // fresh install uses the normal direct installer (the flow that worked before minimaCore stopped
         // installing).
-        String base = (installed && !update) ? "Open"
+        String base = !isApk ? "Get"
+                : (installed && !update) ? "Open"
                 : (official && installed ? "Download" : (installed ? "Update" : "Install"));
         boolean accent = !base.equals("Open");
         String label = busy ? progressLabel(app.packageId) : base;
@@ -217,6 +224,7 @@ public class MainActivity extends AppCompatActivity {
             } catch (Exception e) { toast("Couldn't open " + app.name); }
             return;
         }
+        if ("Get".equals(label)) { openInBrowser(app.file); return; }
         if ("Download".equals(label)) { downloadToDownloads(app); return; }
         if (downloading.contains(app.packageId)) return;   // already downloading this app
         if (app.file == null || app.file.isEmpty()) { toast("No download URL for " + app.name); return; }
@@ -251,6 +259,17 @@ public class MainActivity extends AppCompatActivity {
                 toast(message);
             }
         });
+    }
+
+    /** Open a non-app download (an AI skill zip, a desktop build, etc.) in the browser, which handles
+     *  the download with the correct filename and MIME type — never the Android package installer. */
+    private void openInBrowser(String url) {
+        if (url == null || url.isEmpty()) { toast("No download link"); return; }
+        try {
+            startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url)));
+        } catch (Exception e) {
+            toast("Couldn't open the link");
+        }
     }
 
     /** Download an APK to the public Downloads folder via the system DownloadManager (with a notification
