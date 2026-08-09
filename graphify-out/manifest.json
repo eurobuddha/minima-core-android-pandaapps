@@ -1,0 +1,102 @@
+{
+  "app/build.gradle": {
+    "mtime": 1785921681.7091994,
+    "ast_hash": "5545988ea2a70e921d46e0cba37e1d5c",
+    "semantic_hash": ""
+  },
+  "app/src/main/java/com/eurobuddha/pandaapps/ApkDownloader.java": {
+    "mtime": 1783339284.759539,
+    "ast_hash": "cf30760597715be330bbe82b81666b9a",
+    "semantic_hash": "cf30760597715be330bbe82b81666b9a"
+  },
+  "app/src/main/java/com/eurobuddha/pandaapps/AppEntry.java": {
+    "mtime": 1783339284.7603366,
+    "ast_hash": "2b4aa1f5b46b9ff3abee6c35b289d86e",
+    "semantic_hash": "2b4aa1f5b46b9ff3abee6c35b289d86e"
+  },
+  "app/src/main/java/com/eurobuddha/pandaapps/Catalog.java": {
+    "mtime": 1784634642.480537,
+    "ast_hash": "cd361b8e05bf6ee5ec2be2e2045281eb",
+    "semantic_hash": "cd361b8e05bf6ee5ec2be2e2045281eb"
+  },
+  "app/src/main/java/com/eurobuddha/pandaapps/ImageLoader.java": {
+    "mtime": 1783339284.7607276,
+    "ast_hash": "addb6fd40b80e308e4481c10d485ba99",
+    "semantic_hash": "addb6fd40b80e308e4481c10d485ba99"
+  },
+  "app/src/main/java/com/eurobuddha/pandaapps/Installer.java": {
+    "mtime": 1783339284.7591264,
+    "ast_hash": "a2bb03c2a6fc0c15f8a779e403bdd6c6",
+    "semantic_hash": "a2bb03c2a6fc0c15f8a779e403bdd6c6"
+  },
+  "app/src/main/java/com/eurobuddha/pandaapps/MainActivity.java": {
+    "mtime": 1785921671.2831085,
+    "ast_hash": "64fa211e31574e3958a95162a1efe5ab",
+    "semantic_hash": ""
+  },
+  "app/src/main/java/com/eurobuddha/pandaapps/PackageUtil.java": {
+    "mtime": 1783339284.7580786,
+    "ast_hash": "282e66ce91b8a7ecc43dd000ec0f6822",
+    "semantic_hash": "282e66ce91b8a7ecc43dd000ec0f6822"
+  },
+  "app/src/main/java/com/eurobuddha/pandaapps/Theme.java": {
+    "mtime": 1783339284.7599008,
+    "ast_hash": "0f0c2c73b392c24e4ec2d112e9ae1568",
+    "semantic_hash": "0f0c2c73b392c24e4ec2d112e9ae1568"
+  },
+  "app/src/main/java/com/eurobuddha/pandaapps/Ui.java": {
+    "mtime": 1783339284.7585146,
+    "ast_hash": "ba16a81bc1c9642c9b2a8f20366cc229",
+    "semantic_hash": "ba16a81bc1c9642c9b2a8f20366cc229"
+  },
+  "build.gradle": {
+    "mtime": 1782570437.72313,
+    "ast_hash": "4d251466b34f1ae1f5bacd62e2d49824",
+    "semantic_hash": "4d251466b34f1ae1f5bacd62e2d49824"
+  },
+  "gradlew": {
+    "mtime": 1782570394.5080657,
+    "ast_hash": "02c16663c6f0aa37f98d94d698c22b8c",
+    "semantic_hash": "02c16663c6f0aa37f98d94d698c22b8c"
+  },
+  "settings.gradle": {
+    "mtime": 1782570436.3904455,
+    "ast_hash": "c605dcd895bd865a8df3d1b4696ec419",
+    "semantic_hash": "c605dcd895bd865a8df3d1b4696ec419"
+  },
+  "CLAUDE.md": {
+    "mtime": 1784124679.0662673,
+    "ast_hash": "4439d09bc81851d89f9ffcecc4136dcf",
+    "semantic_hash": ""
+  },
+  "README.md": {
+    "mtime": 1783942012.7826965,
+    "ast_hash": "54476d985867c03ae90792e36575cf0a",
+    "semantic_hash": ""
+  },
+  "app/src/main/res/mipmap-hdpi/ic_launcher_foreground.png": {
+    "mtime": 1782580212.6991541,
+    "ast_hash": "a87bd6f5d8ddefb452f89486cda0bc4c",
+    "semantic_hash": ""
+  },
+  "app/src/main/res/mipmap-mdpi/ic_launcher_foreground.png": {
+    "mtime": 1782580212.6965399,
+    "ast_hash": "8dd4e5c6a641c7ffeeab39af2a9c1eef",
+    "semantic_hash": ""
+  },
+  "app/src/main/res/mipmap-xhdpi/ic_launcher_foreground.png": {
+    "mtime": 1782580212.7028215,
+    "ast_hash": "5487ba767718785454f26c6430663249",
+    "semantic_hash": ""
+  },
+  "app/src/main/res/mipmap-xxhdpi/ic_launcher_foreground.png": {
+    "mtime": 1782580212.7095919,
+    "ast_hash": "f89bc630a2b31083ffa926b9ce93f2ad",
+    "semantic_hash": ""
+  },
+  "app/src/main/res/mipmap-xxxhdpi/ic_launcher_foreground.png": {
+    "mtime": 1782580212.719751,
+    "ast_hash": "fe1f5905344e1edb83200a433cd4aaa0",
+    "semantic_hash": ""
+  }
+}
