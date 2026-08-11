@@ -1,7 +1,7 @@
 {
   "app/build.gradle": {
-    "mtime": 1785921681.7091994,
-    "ast_hash": "5545988ea2a70e921d46e0cba37e1d5c",
+    "mtime": 1786444394.1535683,
+    "ast_hash": "954c95b4c51417a8c7a52f0432f14feb",
     "semantic_hash": ""
   },
   "app/src/main/java/com/eurobuddha/pandaapps/ApkDownloader.java": {
