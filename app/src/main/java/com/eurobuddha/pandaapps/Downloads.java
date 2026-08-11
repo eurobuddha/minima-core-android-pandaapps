@@ -31,7 +31,9 @@ public final class Downloads {
     public static final class State {
         public int percent;         // -1 when the server sent no content length
         public boolean running;
-        public boolean installing;  // handed off to the system installer
+        /** Handed off to the system installer. Guards the cache prune only — never drives row text,
+         *  because once the installer has the APK, PackageUtil is what says whether it landed. */
+        public boolean installing;
         public String error;        // last failure, or null
     }
 
@@ -54,8 +56,22 @@ public final class Downloads {
         return s != null && s.running;
     }
 
-    /** Forget a finished download's state (used once a screen has shown its error). */
+    /** Forget one package's state. */
     public static synchronized void clear(String pkg) { STATES.remove(pkg); }
+
+    /**
+     * Drop every download that is no longer in flight.
+     *
+     * Called when the list screen resumes, which means the user is back in our app: any download
+     * that finished has either reached the system installer — from which point
+     * {@link PackageUtil} is the only truth about what is installed — or failed and already shown
+     * its error on the detail screen. Without this the terminal flags below are never reset, and a
+     * row would keep reporting "Waiting for the installer…" long after the install succeeded.
+     */
+    public static synchronized void clearSettled() {
+        java.util.Iterator<Map.Entry<String, State>> it = STATES.entrySet().iterator();
+        while (it.hasNext()) if (!it.next().getValue().running) it.remove();
+    }
 
     /**
      * True while any download is in flight or waiting on the system installer. Downloads now

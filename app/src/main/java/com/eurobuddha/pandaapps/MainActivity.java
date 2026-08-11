@@ -32,9 +32,15 @@ public class MainActivity extends AppCompatActivity implements Downloads.Listene
     private boolean loaded = false;
     private String disclaimer = "";   // store-wide "in development / use at own risk" banner (from the catalog)
 
-    // Per-row state binders, keyed by packageId, so a download tick repaints just the affected rows
-    // instead of rebuilding the whole list on every percent.
-    private final Map<String, Runnable> rowBinders = new HashMap<>();
+    // Per-row state binders, so a download tick repaints the rows instead of rebuilding the whole
+    // list on every percent. A list, not a map keyed by packageId: an app with an update is drawn
+    // twice — once under UPDATES and once in its group — and keying by package let the second
+    // registration silently replace the first, freezing the pinned UPDATES row mid-download.
+    private final List<Runnable> rowBinders = new ArrayList<>();
+
+    // Installed versionCode per package, snapshotted once per render. Each lookup is a binder IPC
+    // into system_server, and this screen asks about every app in the catalog twice per pass.
+    private final Map<String, Long> installedCodes = new HashMap<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,6 +67,10 @@ public class MainActivity extends AppCompatActivity implements Downloads.Listene
 
     @Override protected void onResume() {
         super.onResume();
+        // Being back here means the installer (or the detail screen) is done with anything it had,
+        // so retire settled downloads before redrawing — otherwise their terminal flags would keep
+        // overriding the real installed state below.
+        Downloads.clearSettled();
         // Re-render so install state is current after returning from the installer or a detail page.
         if (loaded) render();
     }
@@ -72,7 +82,7 @@ public class MainActivity extends AppCompatActivity implements Downloads.Listene
 
     /** A download ticked — repaint the affected rows in place, no relayout of the whole list. */
     @Override public void onDownloadsChanged() {
-        for (Runnable binder : new ArrayList<>(rowBinders.values())) binder.run();
+        for (Runnable binder : new ArrayList<>(rowBinders)) binder.run();
     }
 
     private void fetch() {
@@ -99,6 +109,15 @@ public class MainActivity extends AppCompatActivity implements Downloads.Listene
     private void render() {
         container.removeAllViews();
         rowBinders.clear();
+
+        // One PackageManager lookup per app for the whole pass, rather than one in hasUpdate() and
+        // another in every bindRow().
+        installedCodes.clear();
+        for (AppEntry a : apps) {
+            if (a.isApk() && !installedCodes.containsKey(a.packageId)) {
+                installedCodes.put(a.packageId, PackageUtil.installedVersionCode(this, a.packageId));
+            }
+        }
 
         // The store's own entry gets a quiet footer row rather than a group of its own.
         AppEntry self = null;
@@ -140,9 +159,15 @@ public class MainActivity extends AppCompatActivity implements Downloads.Listene
         if (self != null) container.addView(footerRow(self));
     }
 
+    /** Installed versionCode from this render's snapshot, or -1 if absent/not an APK. */
+    private long installedCode(AppEntry a) {
+        Long c = installedCodes.get(a.packageId);
+        return c == null ? -1 : c;
+    }
+
     private boolean hasUpdate(AppEntry a) {
         if (!a.isApk()) return false;
-        long inst = PackageUtil.installedVersionCode(this, a.packageId);
+        long inst = installedCode(a);
         return inst >= 0 && a.versionCode > inst;
     }
 
@@ -206,7 +231,7 @@ public class MainActivity extends AppCompatActivity implements Downloads.Listene
 
         Runnable bind = () -> bindRow(app, inUpdates, sub, chip);
         bind.run();
-        rowBinders.put(app.packageId, bind);
+        rowBinders.add(bind);
         return card;
     }
 
@@ -220,12 +245,9 @@ public class MainActivity extends AppCompatActivity implements Downloads.Listene
             showChip(chip, d.percent < 0 ? "…" : d.percent + "%");
             return;
         }
-        if (d != null && d.installing) {
-            sub.setText("Waiting for the installer…");
-            sub.setTextColor(Theme.DIM);
-            hideChip(chip);
-            return;
-        }
+        // Deliberately no branch for d.installing: once the APK has reached the system installer,
+        // the package manager is the only honest answer about whether it landed, and that flag is
+        // not cleared until this screen resumes.
         if (d != null && d.error != null) {
             sub.setText(d.error);
             sub.setTextColor(0xFFE0574A);
@@ -240,7 +262,7 @@ public class MainActivity extends AppCompatActivity implements Downloads.Listene
             return;
         }
 
-        long inst = PackageUtil.installedVersionCode(this, app.packageId);
+        long inst = installedCode(app);
         boolean installed = inst >= 0;
         boolean update = installed && app.versionCode > inst;
 

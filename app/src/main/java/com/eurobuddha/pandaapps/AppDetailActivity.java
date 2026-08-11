@@ -49,6 +49,13 @@ public class AppDetailActivity extends AppCompatActivity implements Downloads.Li
     private LinearLayout body;
     private boolean showAllNotes = false;
 
+    // Live progress views. A download reports every changed percent, so rebuilding the page on each
+    // tick meant up to 101 full view-tree rebuilds — and emptying the ScrollView throws the reader
+    // back to the top each time. Held here so a tick repaints two views instead. Cleared at the top
+    // of render() so they can never outlive the views they point at.
+    private TextView progressPct;
+    private ProgressBar progressBar;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -97,13 +104,25 @@ public class AppDetailActivity extends AppCompatActivity implements Downloads.Li
     }
 
     @Override public void onDownloadsChanged() {
-        if (app != null) render();
+        if (app == null) return;
+        Downloads.State d = Downloads.get(app.packageId);
+        // A percent tick changes two labels, not the layout — only start, finish and failure alter
+        // which sections exist, and those fall through to a full render.
+        if (d != null && d.running && progressBar != null && progressPct != null) {
+            progressPct.setText(d.percent < 0 ? "…" : d.percent + "%");
+            progressBar.setIndeterminate(d.percent < 0);
+            if (d.percent >= 0) progressBar.setProgress(d.percent);
+            return;
+        }
+        render();
     }
 
     // ---------------------------------------------------------------- render
 
     private void render() {
         body.removeAllViews();
+        progressPct = null;         // the views these pointed at are gone as of the line above
+        progressBar = null;
         body.addView(hero());
         addActionArea();
 
@@ -247,10 +266,12 @@ public class AppDetailActivity extends AppCompatActivity implements Downloads.Li
         label.setLayoutParams(new LinearLayout.LayoutParams(
                 0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
         top.addView(label);
-        top.addView(Ui.text(this, d.percent < 0 ? "…" : d.percent + "%", Theme.ACCENT, 13, true));
+        progressPct = Ui.text(this, d.percent < 0 ? "…" : d.percent + "%", Theme.ACCENT, 13, true);
+        top.addView(progressPct);
         p.addView(top);
 
         ProgressBar bar = new ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal);
+        progressBar = bar;
         bar.setMax(100);
         if (d.percent < 0) {
             bar.setIndeterminate(true);
@@ -407,8 +428,16 @@ public class AppDetailActivity extends AppCompatActivity implements Downloads.Li
      *  filename and MIME type properly — never the Android package installer. */
     private void openInBrowser(String url) {
         if (url == null || url.isEmpty()) { toast("No download link"); return; }
+        // The catalog is remote data, and the IPFS fallback can be served by a public gateway, so
+        // only hand the browser a web link — never an arbitrary scheme aimed at another component.
+        Uri uri = Uri.parse(url);
+        String scheme = uri.getScheme();
+        if (!"http".equalsIgnoreCase(scheme) && !"https".equalsIgnoreCase(scheme)) {
+            toast("Unsupported link");
+            return;
+        }
         try {
-            startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url)));
+            startActivity(new Intent(Intent.ACTION_VIEW, uri));
         } catch (Exception e) {
             toast("Couldn't open the link");
         }

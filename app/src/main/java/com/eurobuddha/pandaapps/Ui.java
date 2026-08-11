@@ -76,10 +76,15 @@ public final class Ui {
         return b;
     }
 
-    /** The platform's pressed/ripple highlight, for rows that act as one big tap target. */
+    /** The platform's pressed/ripple highlight, for rows that act as one big tap target.
+     *  Null if the current theme has no such attribute — callers pass it straight to
+     *  setForeground(), which accepts null as "no highlight". */
     public static android.graphics.drawable.Drawable ripple(Context c) {
         TypedValue tv = new TypedValue();
-        c.getTheme().resolveAttribute(android.R.attr.selectableItemBackground, tv, true);
+        if (!c.getTheme().resolveAttribute(android.R.attr.selectableItemBackground, tv, true)
+                || tv.resourceId == 0) {
+            return null;
+        }
         return androidx.core.content.ContextCompat.getDrawable(c, tv.resourceId);
     }
 
