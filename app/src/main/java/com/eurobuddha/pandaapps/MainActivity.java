@@ -1,44 +1,40 @@
 package com.eurobuddha.pandaapps;
 
-import android.app.DownloadManager;
-import android.content.Intent;
-import android.net.Uri;
 import android.os.Bundle;
-import android.os.Environment;
-import android.view.Gravity;
 import android.view.View;
-import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
- * PandaApps — a native app store for Minima companion APKs. Fetches a curated apks.json catalog,
- * lists the apps (grouped by source), and downloads + installs them via the system package installer.
+ * PandaApps — a native app store for Minima companion APKs. Fetches a curated apks.json catalog and
+ * lists the apps grouped by what they do; tapping a row opens {@link AppDetailActivity}, which owns
+ * the description, the version history and every install action.
+ *
+ * This screen deliberately carries no app descriptions. The catalog's `description` field is a
+ * running changelog (median 653 chars, up to 6741), so rendering it per row is what made the old
+ * single-screen list unreadable.
  */
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements Downloads.Listener {
 
     private LinearLayout container;
     private TextView status;
+    private TextView subtitle;
     private final List<AppEntry> apps = new ArrayList<>();
     private boolean loaded = false;
     private String disclaimer = "";   // store-wide "in development / use at own risk" banner (from the catalog)
-    // Downloads in progress, keyed by packageId — survives re-renders so we never start a second
-    // writer for the same app, and the current card's button always reflects live progress.
-    private final Set<String> downloading = new HashSet<>();
-    private final Map<String, Integer> progress = new HashMap<>();       // packageId -> last percent
-    private final Map<String, Button> actionButtons = new HashMap<>();   // packageId -> current button
+
+    // Per-row state binders, keyed by packageId, so a download tick repaints just the affected rows
+    // instead of rebuilding the whole list on every percent.
+    private final Map<String, Runnable> rowBinders = new HashMap<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,15 +52,27 @@ public class MainActivity extends AppCompatActivity {
 
         container = findViewById(R.id.container);
         status = findViewById(R.id.status);
+        subtitle = findViewById(R.id.subtitle);
         findViewById(R.id.btnRefresh).setOnClickListener(v -> fetch());
 
+        Downloads.addListener(this);
         fetch();
     }
 
     @Override protected void onResume() {
         super.onResume();
-        // Re-render so Install/Update flips to Open after returning from the system installer.
+        // Re-render so install state is current after returning from the installer or a detail page.
         if (loaded) render();
+    }
+
+    @Override protected void onDestroy() {
+        super.onDestroy();
+        Downloads.removeListener(this);
+    }
+
+    /** A download ticked — repaint the affected rows in place, no relayout of the whole list. */
+    @Override public void onDownloadsChanged() {
+        for (Runnable binder : new ArrayList<>(rowBinders.values())) binder.run();
     }
 
     private void fetch() {
@@ -81,37 +89,67 @@ public class MainActivity extends AppCompatActivity {
             @Override public void onError(String message) {
                 showStatus(message);
                 container.removeAllViews();
+                rowBinders.clear();
             }
         });
     }
 
+    // ---------------------------------------------------------------- list
+
     private void render() {
         container.removeAllViews();
-        if (!disclaimer.isEmpty()) container.addView(disclaimerBanner());
-        renderGroup("YOUR APPS", "PandaApps");
-        renderGroup("OFFICIAL MINIMA", "Official");
-        // Anything with an unexpected source goes under a catch-all.
-        List<AppEntry> other = new ArrayList<>();
-        for (AppEntry a : apps) if (!"PandaApps".equals(a.source) && !"Official".equals(a.source)) other.add(a);
-        if (!other.isEmpty()) {
-            container.addView(heading("MORE"));
-            for (AppEntry a : other) container.addView(card(a));
+        rowBinders.clear();
+
+        // The store's own entry gets a quiet footer row rather than a group of its own.
+        AppEntry self = null;
+        List<AppEntry> rest = new ArrayList<>();
+        for (AppEntry a : apps) {
+            if (getPackageName().equals(a.packageId)) self = a; else rest.add(a);
         }
+
+        // Anything out of date goes to the top — including the store itself.
+        List<AppEntry> updates = new ArrayList<>();
+        for (AppEntry a : apps) if (hasUpdate(a)) updates.add(a);
+
+        subtitle.setText(apps.size() + " apps"
+                + (updates.isEmpty() ? "" : "  ·  " + updates.size()
+                        + (updates.size() == 1 ? " update" : " updates")));
+
+        if (!disclaimer.isEmpty()) container.addView(disclaimerBanner());
+
+        if (!updates.isEmpty()) {
+            container.addView(heading("UPDATES  ·  " + updates.size()));
+            for (AppEntry a : updates) container.addView(row(a, true));
+        }
+
+        // Then the function groups, in the order Groups declares.
+        Map<String, List<AppEntry>> byGroup = new HashMap<>();
+        for (AppEntry a : rest) {
+            String g = Groups.groupFor(a);
+            List<AppEntry> l = byGroup.get(g);
+            if (l == null) { l = new ArrayList<>(); byGroup.put(g, l); }
+            l.add(a);
+        }
+        for (String group : Groups.order()) {
+            List<AppEntry> l = byGroup.get(group);
+            if (l == null || l.isEmpty()) continue;
+            container.addView(heading(group));
+            for (AppEntry a : l) container.addView(row(a, false));
+        }
+
+        if (self != null) container.addView(footerRow(self));
     }
 
-    private void renderGroup(String title, String source) {
-        boolean any = false;
-        for (AppEntry a : apps) {
-            if (!source.equals(a.source)) continue;
-            if (!any) { container.addView(heading(title)); any = true; }
-            container.addView(card(a));
-        }
+    private boolean hasUpdate(AppEntry a) {
+        if (!a.isApk()) return false;
+        long inst = PackageUtil.installedVersionCode(this, a.packageId);
+        return inst >= 0 && a.versionCode > inst;
     }
 
     private TextView heading(String s) {
         TextView t = Ui.text(this, s, Theme.DIM, 11, true);
         t.setLetterSpacing(0.12f);
-        t.setPadding(Ui.dp(this, 2), Ui.dp(this, 8), 0, Ui.dp(this, 8));
+        t.setPadding(Ui.dp(this, 2), Ui.dp(this, 18), 0, Ui.dp(this, 8));
         return t;
     }
 
@@ -124,184 +162,145 @@ public class MainActivity extends AppCompatActivity {
         b.setPadding(p, p, p, p);
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-        lp.bottomMargin = Ui.dp(this, 12);
+        lp.bottomMargin = Ui.dp(this, 4);
         b.setLayoutParams(lp);
         b.addView(Ui.text(this, disclaimer, Theme.TEXT, 12, false));
         return b;
     }
 
-    private LinearLayout card(AppEntry app) {
+    /**
+     * One list row: icon, name, a single state line, an optional status chip and a chevron. The
+     * whole row is the tap target and opens the detail screen — no actions live here.
+     */
+    private LinearLayout row(final AppEntry app, final boolean inUpdates) {
         LinearLayout card = Ui.card(this);
+        card.setGravity(android.view.Gravity.CENTER_VERTICAL);
+        int p = Ui.dp(this, 10);
+        card.setPadding(p, p, p, p);
+        card.setForeground(Ui.ripple(this));
+        card.setOnClickListener(v -> AppDetailActivity.open(this, app));
 
-        // icon
         ImageView icon = new ImageView(this);
-        int sz = Ui.dp(this, 56);
+        int sz = Ui.dp(this, 44);
         LinearLayout.LayoutParams ilp = new LinearLayout.LayoutParams(sz, sz);
         ilp.rightMargin = Ui.dp(this, 12);
         icon.setLayoutParams(ilp);
         ImageLoader.load(this, app.icon, icon, android.R.drawable.sym_def_app_icon);
         card.addView(icon);
 
-        // middle column: name + version + source, description
         LinearLayout mid = Ui.col(this);
-        mid.setLayoutParams(new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
-
-        LinearLayout titleRow = Ui.row(this);
-        titleRow.setGravity(android.view.Gravity.CENTER_VERTICAL);
-        // Name gets weight-1 (wraps if long) so a long name can never push the
-        // version label off the row (bit the "Minima Core — New UI (Preview)" entry)
-        TextView name = Ui.text(this, app.name, Theme.TEXT, 15, true);
-        name.setLayoutParams(new LinearLayout.LayoutParams(
+        mid.setLayoutParams(new LinearLayout.LayoutParams(
                 0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
-        titleRow.addView(name);
-        TextView ver = Ui.text(this, "  v" + app.version, Theme.DIM, 12, false);
-        titleRow.addView(ver);
-        mid.addView(titleRow);
-
-        // A non-.apk file (e.g. an AI skill zip, or a desktop .dmg/.exe) is a plain download, not an
-        // Android package — never route it through the package installer.
-        boolean isApk = app.file != null && app.file.toLowerCase().endsWith(".apk");
-        long inst = isApk ? PackageUtil.installedVersionCode(this, app.packageId) : -1;
-        String state = !isApk ? ""
-                : (inst < 0 ? "Not installed"
-                : (app.versionCode > inst ? "Installed v" + PackageUtil.installedVersionName(this, app.packageId) + " · update available"
-                                          : "Installed · up to date"));
-        String metaText = app.category.isEmpty() ? state
-                : (state.isEmpty() ? app.category : app.category + "  ·  " + state);
-        TextView meta = Ui.text(this, metaText,
-                inst >= 0 && app.versionCode <= inst ? Theme.GREEN : Theme.DIM, 11, false);
-        meta.setPadding(0, Ui.dp(this, 2), 0, 0);
-        mid.addView(meta);
-
-        if (!app.description.isEmpty()) {
-            TextView desc = Ui.text(this, app.description, Theme.DIM, 12, false);
-            desc.setPadding(0, Ui.dp(this, 6), 0, 0);
-            mid.addView(desc);
-        }
+        TextView name = Ui.text(this, app.name, Theme.TEXT, 15, true);
+        name.setMaxLines(1);
+        name.setEllipsize(android.text.TextUtils.TruncateAt.END);
+        mid.addView(name);
+        final TextView sub = Ui.text(this, "", Theme.DIM, 11, false);
+        sub.setPadding(0, Ui.dp(this, 3), 0, 0);
+        mid.addView(sub);
         card.addView(mid);
 
-        // action button
-        boolean installed = inst >= 0;
-        boolean update = installed && app.versionCode > inst;
-        // "Official" (foreign-signed) apps can't be reliably installed/updated in-place over an existing
-        // copy, so we DOWNLOAD them to the user's Downloads to install manually instead of Install/Update.
-        boolean official = !"PandaApps".equals(app.source);
-        boolean busy = downloading.contains(app.packageId);
-        // Official (foreign-signed) apps: a FIRST-TIME install works fine through the in-app installer —
-        // signatures only block an in-place UPDATE over an existing, differently-signed copy. So only route
-        // to the manual "download to Downloads" path when UPDATING an already-installed official app; a
-        // fresh install uses the normal direct installer (the flow that worked before minimaCore stopped
-        // installing).
-        String base = !isApk ? "Get"
-                : (installed && !update) ? "Open"
-                : (official && installed ? "Download" : (installed ? "Update" : "Install"));
-        boolean accent = !base.equals("Open");
-        String label = busy ? progressLabel(app.packageId) : base;
-        int bg = busy ? Theme.PANEL2 : (accent ? Theme.ACCENT : Theme.PANEL2);
-        int fg = busy ? Theme.DIM : (accent ? Theme.ON_ACCENT : Theme.TEXT);
-        Button action = Ui.button(this, label, bg, fg);
-        action.setEnabled(!busy);
-        LinearLayout.LayoutParams blp = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-        blp.leftMargin = Ui.dp(this, 8);
-        action.setLayoutParams(blp);
-        actionButtons.put(app.packageId, action);   // current button for this app (for live progress)
-        action.setOnClickListener(v -> onAction(app, base));
-        card.addView(action);
+        final TextView chip = Ui.badge(this, "", Theme.ON_ACCENT, Theme.ACCENT);
+        card.addView(chip);
+        card.addView(Ui.chevron(this));
+
+        Runnable bind = () -> bindRow(app, inUpdates, sub, chip);
+        bind.run();
+        rowBinders.put(app.packageId, bind);
         return card;
     }
 
-    private String progressLabel(String pkg) {
-        Integer p = progress.get(pkg);
-        return p == null || p < 0 ? "…" : p + "%";
-    }
+    /** Paint a row's changeable parts. Called when the row is built and on every download tick. */
+    private void bindRow(AppEntry app, boolean inUpdates, TextView sub, TextView chip) {
+        Downloads.State d = Downloads.get(app.packageId);
 
-    private void onAction(AppEntry app, String label) {
-        if ("Open".equals(label)) {
-            Intent i = PackageUtil.launchIntent(this, app.packageId);
-            try {
-                if (i != null) startActivity(i); else toast("Couldn't open " + app.name);
-            } catch (Exception e) { toast("Couldn't open " + app.name); }
+        if (d != null && d.running) {
+            sub.setText(d.percent < 0 ? "Downloading…" : "Downloading " + d.percent + "%");
+            sub.setTextColor(Theme.DIM);
+            showChip(chip, d.percent < 0 ? "…" : d.percent + "%");
             return;
         }
-        if ("Get".equals(label)) { openInBrowser(app.file); return; }
-        if ("Download".equals(label)) { downloadToDownloads(app); return; }
-        if (downloading.contains(app.packageId)) return;   // already downloading this app
-        if (app.file == null || app.file.isEmpty()) { toast("No download URL for " + app.name); return; }
-        if (!Installer.canInstall(this)) {
-            toast("Allow PandaApps to install apps, then tap again");
-            Installer.requestPermission(this);
+        if (d != null && d.installing) {
+            sub.setText("Waiting for the installer…");
+            sub.setTextColor(Theme.DIM);
+            hideChip(chip);
             return;
         }
-        final String pkg = app.packageId;
-        downloading.add(pkg);
-        progress.put(pkg, 0);
-        setButton(pkg, "0%", false);
-        ApkDownloader.download(this, app, new ApkDownloader.Cb() {
-            @Override public void onProgress(int percent) {
-                progress.put(pkg, percent);
-                setButton(pkg, percent < 0 ? "…" : percent + "%", false);
-            }
-            @Override public void onComplete(File apk) {
-                downloading.remove(pkg);
-                progress.remove(pkg);
-                setButton(pkg, "Opening…", false);
-                if (!Installer.install(MainActivity.this, apk)) {
-                    toast("Couldn't open the installer");
-                    render();   // reset the button to its normal state
-                }
-                // else: system installer takes over; onResume re-renders to Open/Update
-            }
-            @Override public void onError(String message) {
-                downloading.remove(pkg);
-                progress.remove(pkg);
-                render();       // back to Install/Update
-                toast(message);
-            }
-        });
-    }
+        if (d != null && d.error != null) {
+            sub.setText(d.error);
+            sub.setTextColor(0xFFE0574A);
+            hideChip(chip);
+            return;
+        }
 
-    /** Open a non-app download (an AI skill zip, a desktop build, etc.) in the browser, which handles
-     *  the download with the correct filename and MIME type — never the Android package installer. */
-    private void openInBrowser(String url) {
-        if (url == null || url.isEmpty()) { toast("No download link"); return; }
-        try {
-            startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url)));
-        } catch (Exception e) {
-            toast("Couldn't open the link");
+        if (!app.isApk()) {
+            sub.setText(app.source.isEmpty() ? "Download" : app.source);
+            sub.setTextColor(Theme.DIM);
+            hideChip(chip);
+            return;
+        }
+
+        long inst = PackageUtil.installedVersionCode(this, app.packageId);
+        boolean installed = inst >= 0;
+        boolean update = installed && app.versionCode > inst;
+
+        if (update) {
+            String v = PackageUtil.installedVersionName(this, app.packageId);
+            sub.setText(inUpdates
+                    ? (v == null ? "?" : v) + "  →  " + app.version
+                    : "Installed v" + (v == null ? "?" : v) + "  ·  update available");
+            sub.setTextColor(Theme.DIM);
+            showChip(chip, "UPDATE");
+        } else if (installed) {
+            sub.setText("Installed  ·  up to date");
+            sub.setTextColor(Theme.GREEN);
+            hideChip(chip);
+        } else {
+            sub.setText("Not installed");
+            sub.setTextColor(Theme.DIM);
+            hideChip(chip);
         }
     }
 
-    /** Download an APK to the public Downloads folder via the system DownloadManager (with a notification
-     *  to install when done). Used for "Official" apps we don't sign — the user installs them manually,
-     *  since the system installer can't update a same-package app signed with a different key. */
-    private void downloadToDownloads(AppEntry app) {
-        if (app.file == null || app.file.isEmpty()) { toast("No download URL for " + app.name); return; }
-        try {
-            DownloadManager dm = (DownloadManager) getSystemService(DOWNLOAD_SERVICE);
-            DownloadManager.Request req = new DownloadManager.Request(Uri.parse(app.file));
-            req.setTitle(app.name + " " + app.version);
-            req.setDescription("Tap when finished to install");
-            req.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
-            req.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, app.cacheName());
-            req.setMimeType("application/vnd.android.package-archive");
-            dm.enqueue(req);
-            toast("Downloading " + app.name + " to your Downloads…");
-        } catch (Exception e) {
-            toast("Couldn't start the download");
-        }
+    private void showChip(TextView chip, String text) {
+        chip.setText(text);
+        chip.setVisibility(View.VISIBLE);
     }
 
-    /** Update the button currently representing this app (survives re-renders). */
-    private void setButton(String pkg, String text, boolean enabled) {
-        Button b = actionButtons.get(pkg);
-        if (b != null) { b.setText(text); b.setEnabled(enabled); }
+    private void hideChip(TextView chip) { chip.setVisibility(View.GONE); }
+
+    /** The store's own entry, kept out of the groups and parked at the bottom. */
+    private LinearLayout footerRow(final AppEntry self) {
+        LinearLayout card = Ui.card(this);
+        card.setGravity(android.view.Gravity.CENTER_VERTICAL);
+        int p = Ui.dp(this, 12);
+        card.setPadding(p, p, p, p);
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        lp.topMargin = Ui.dp(this, 18);
+        card.setLayoutParams(lp);
+        card.setForeground(Ui.ripple(this));
+        card.setOnClickListener(v -> AppDetailActivity.open(this, self));
+
+        LinearLayout mid = Ui.col(this);
+        mid.setLayoutParams(new LinearLayout.LayoutParams(
+                0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
+        mid.addView(Ui.text(this, "About this store", Theme.TEXT, 13, true));
+        TextView v = Ui.text(this, self.name + " v" + self.version, Theme.DIM, 11, false);
+        v.setPadding(0, Ui.dp(this, 2), 0, 0);
+        mid.addView(v);
+        card.addView(mid);
+        card.addView(Ui.chevron(this));
+        return card;
     }
+
+    // ---------------------------------------------------------------- housekeeping
 
     /** Delete leftover finished downloads so they don't accumulate. Leaves any ".part" alone in case
      *  a download survived a config-change recreate (it streams to app context, not this Activity). */
     private void pruneCache() {
         try {
+            if (Downloads.anyBusy()) return;   // a recreate must not delete what the installer is reading
             File dir = new File(getCacheDir(), "apks");
             File[] files = dir.listFiles();
             if (files != null) for (File f : files) if (f.getName().endsWith(".apk")) f.delete();
@@ -314,6 +313,4 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void hideStatus() { status.setVisibility(View.GONE); }
-
-    private void toast(String msg) { Toast.makeText(this, msg, Toast.LENGTH_SHORT).show(); }
 }

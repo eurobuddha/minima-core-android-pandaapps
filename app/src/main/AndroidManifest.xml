@@ -36,6 +36,12 @@
             </intent-filter>
         </activity>
 
+        <!-- One app's page: description, version history and every install action -->
+        <activity
+            android:name=".AppDetailActivity"
+            android:exported="false"
+            android:parentActivityName=".MainActivity" />
+
         <!-- Hands the downloaded APK to the system installer as a content:// URI (Android N+) -->
         <provider
             android:name="androidx.core.content.FileProvider"

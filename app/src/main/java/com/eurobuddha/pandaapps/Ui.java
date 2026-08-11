@@ -76,6 +76,20 @@ public final class Ui {
         return b;
     }
 
+    /** The platform's pressed/ripple highlight, for rows that act as one big tap target. */
+    public static android.graphics.drawable.Drawable ripple(Context c) {
+        TypedValue tv = new TypedValue();
+        c.getTheme().resolveAttribute(android.R.attr.selectableItemBackground, tv, true);
+        return androidx.core.content.ContextCompat.getDrawable(c, tv.resourceId);
+    }
+
+    /** Trailing "›" affordance on a row that opens another screen. */
+    public static TextView chevron(Context c) {
+        TextView t = text(c, "›", Theme.DIM, 20, false);
+        t.setPadding(dp(c, 10), 0, 0, dp(c, 2));
+        return t;
+    }
+
     public static TextView badge(Context c, String s, int fg, int bg) {
         TextView t = text(c, s.toUpperCase(), fg, 9, true);
         t.setLetterSpacing(0.08f);

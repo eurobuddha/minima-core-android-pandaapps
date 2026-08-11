@@ -25,7 +25,7 @@ public final class ImageLoader {
 
     private ImageLoader() {}
 
-    public static void load(final MainActivity act, final String url, final ImageView iv, int fallbackRes) {
+    public static void load(final android.app.Activity act, final String url, final ImageView iv, int fallbackRes) {
         iv.setTag(url);
         if (url == null || url.isEmpty()) { iv.setImageResource(fallbackRes); return; }
 
