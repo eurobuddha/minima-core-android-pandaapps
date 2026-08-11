@@ -1,7 +1,7 @@
 {
   "app/build.gradle": {
-    "mtime": 1786452347.1934943,
-    "ast_hash": "7e8ccfd7c54faf443418c27355e7bcc5",
+    "mtime": 1786457971.8248734,
+    "ast_hash": "6504c3a5b24f38b39866589c1c34605b",
     "semantic_hash": ""
   },
   "app/src/main/java/com/eurobuddha/pandaapps/ApkDownloader.java": {
@@ -30,8 +30,8 @@
     "semantic_hash": "a2bb03c2a6fc0c15f8a779e403bdd6c6"
   },
   "app/src/main/java/com/eurobuddha/pandaapps/MainActivity.java": {
-    "mtime": 1786452346.1786838,
-    "ast_hash": "8b041a3e2e287f41500015420420ae32",
+    "mtime": 1786457882.2276258,
+    "ast_hash": "1452f45dbe133d9f4e1b5c3e7f12ea6d",
     "semantic_hash": ""
   },
   "app/src/main/java/com/eurobuddha/pandaapps/PackageUtil.java": {
@@ -45,8 +45,8 @@
     "semantic_hash": "0f0c2c73b392c24e4ec2d112e9ae1568"
   },
   "app/src/main/java/com/eurobuddha/pandaapps/Ui.java": {
-    "mtime": 1786452148.3880186,
-    "ast_hash": "2e87223c841c617bf4e9fb5f6fafe804",
+    "mtime": 1786457971.055796,
+    "ast_hash": "cc7338e57bd29c961abe499ca5dcd2dc",
     "semantic_hash": ""
   },
   "build.gradle": {
@@ -100,8 +100,8 @@
     "semantic_hash": ""
   },
   "app/src/main/java/com/eurobuddha/pandaapps/AppDetailActivity.java": {
-    "mtime": 1786453359.2264607,
-    "ast_hash": "b052629f8ebc45377ae61f1316d5184e",
+    "mtime": 1786457943.887098,
+    "ast_hash": "c862c0de2e6e8444507f8f4e90e5c940",
     "semantic_hash": ""
   },
   "app/src/main/java/com/eurobuddha/pandaapps/Blurb.java": {
@@ -110,8 +110,8 @@
     "semantic_hash": ""
   },
   "app/src/main/java/com/eurobuddha/pandaapps/Downloads.java": {
-    "mtime": 1786452338.0152063,
-    "ast_hash": "4d8156cbe5e98a0f0e4f81f766807a58",
+    "mtime": 1786457776.0060036,
+    "ast_hash": "91e671e046f2a280a950659ef7929329",
     "semantic_hash": ""
   },
   "app/src/main/java/com/eurobuddha/pandaapps/Groups.java": {
