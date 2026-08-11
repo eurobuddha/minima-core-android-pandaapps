@@ -1,0 +1,205 @@
+{
+  "communities": {
+    "0": [
+      "app_src_main_java_com_eurobuddha_pandaapps_mainactivity",
+      "app_src_main_java_com_eurobuddha_pandaapps_mainactivity_java_button",
+      "app_src_main_java_com_eurobuddha_pandaapps_mainactivity_java_linearlayout",
+      "app_src_main_java_com_eurobuddha_pandaapps_mainactivity_java_textview",
+      "app_src_main_java_com_eurobuddha_pandaapps_mainactivity_mainactivity",
+      "app_src_main_java_com_eurobuddha_pandaapps_mainactivity_mainactivity_card",
+      "app_src_main_java_com_eurobuddha_pandaapps_mainactivity_mainactivity_fetch",
+      "app_src_main_java_com_eurobuddha_pandaapps_mainactivity_mainactivity_heading",
+      "app_src_main_java_com_eurobuddha_pandaapps_mainactivity_mainactivity_hidestatus",
+      "app_src_main_java_com_eurobuddha_pandaapps_mainactivity_mainactivity_oncreate",
+      "app_src_main_java_com_eurobuddha_pandaapps_mainactivity_mainactivity_onresume",
+      "app_src_main_java_com_eurobuddha_pandaapps_mainactivity_mainactivity_progresslabel",
+      "app_src_main_java_com_eurobuddha_pandaapps_mainactivity_mainactivity_prunecache",
+      "app_src_main_java_com_eurobuddha_pandaapps_mainactivity_mainactivity_render",
+      "app_src_main_java_com_eurobuddha_pandaapps_mainactivity_mainactivity_rendergroup",
+      "app_src_main_java_com_eurobuddha_pandaapps_mainactivity_mainactivity_showstatus",
+      "appcompatactivity",
+      "bundle",
+      "override"
+    ],
+    "1": [
+      "activity",
+      "app_src_main_java_com_eurobuddha_pandaapps_installer",
+      "app_src_main_java_com_eurobuddha_pandaapps_installer_installer",
+      "app_src_main_java_com_eurobuddha_pandaapps_installer_installer_caninstall",
+      "app_src_main_java_com_eurobuddha_pandaapps_installer_installer_install",
+      "app_src_main_java_com_eurobuddha_pandaapps_installer_installer_installer",
+      "app_src_main_java_com_eurobuddha_pandaapps_installer_installer_requestpermission",
+      "app_src_main_java_com_eurobuddha_pandaapps_installer_java_context",
+      "app_src_main_java_com_eurobuddha_pandaapps_packageutil",
+      "app_src_main_java_com_eurobuddha_pandaapps_packageutil_java_context",
+      "app_src_main_java_com_eurobuddha_pandaapps_packageutil_packageutil",
+      "app_src_main_java_com_eurobuddha_pandaapps_packageutil_packageutil_installedversioncode",
+      "app_src_main_java_com_eurobuddha_pandaapps_packageutil_packageutil_installedversionname",
+      "app_src_main_java_com_eurobuddha_pandaapps_packageutil_packageutil_launchintent",
+      "app_src_main_java_com_eurobuddha_pandaapps_packageutil_packageutil_packageutil",
+      "build",
+      "intent",
+      "settings"
+    ],
+    "2": [
+      "app_src_main_java_com_eurobuddha_pandaapps_mainactivity_mainactivity_disclaimerbanner",
+      "app_src_main_java_com_eurobuddha_pandaapps_ui",
+      "app_src_main_java_com_eurobuddha_pandaapps_ui_java_button",
+      "app_src_main_java_com_eurobuddha_pandaapps_ui_java_context",
+      "app_src_main_java_com_eurobuddha_pandaapps_ui_java_linearlayout",
+      "app_src_main_java_com_eurobuddha_pandaapps_ui_java_textview",
+      "app_src_main_java_com_eurobuddha_pandaapps_ui_ui",
+      "app_src_main_java_com_eurobuddha_pandaapps_ui_ui_badge",
+      "app_src_main_java_com_eurobuddha_pandaapps_ui_ui_button",
+      "app_src_main_java_com_eurobuddha_pandaapps_ui_ui_card",
+      "app_src_main_java_com_eurobuddha_pandaapps_ui_ui_col",
+      "app_src_main_java_com_eurobuddha_pandaapps_ui_ui_dp",
+      "app_src_main_java_com_eurobuddha_pandaapps_ui_ui_rounded",
+      "app_src_main_java_com_eurobuddha_pandaapps_ui_ui_row",
+      "app_src_main_java_com_eurobuddha_pandaapps_ui_ui_text",
+      "app_src_main_java_com_eurobuddha_pandaapps_ui_ui_ui",
+      "gradientdrawable"
+    ],
+    "3": [
+      "app_src_main_java_com_eurobuddha_pandaapps_apkdownloader",
+      "app_src_main_java_com_eurobuddha_pandaapps_apkdownloader_apkdownloader",
+      "app_src_main_java_com_eurobuddha_pandaapps_apkdownloader_apkdownloader_apkdownloader",
+      "app_src_main_java_com_eurobuddha_pandaapps_apkdownloader_apkdownloader_download",
+      "app_src_main_java_com_eurobuddha_pandaapps_apkdownloader_apkdownloader_hex",
+      "app_src_main_java_com_eurobuddha_pandaapps_apkdownloader_cb",
+      "app_src_main_java_com_eurobuddha_pandaapps_apkdownloader_cb_oncomplete",
+      "app_src_main_java_com_eurobuddha_pandaapps_apkdownloader_cb_onerror",
+      "app_src_main_java_com_eurobuddha_pandaapps_apkdownloader_cb_onprogress",
+      "app_src_main_java_com_eurobuddha_pandaapps_apkdownloader_java_context",
+      "app_src_main_java_com_eurobuddha_pandaapps_appentry_appentry",
+      "app_src_main_java_com_eurobuddha_pandaapps_appentry_appentry_cachename",
+      "app_src_main_java_com_eurobuddha_pandaapps_mainactivity_mainactivity_downloadtodownloads",
+      "app_src_main_java_com_eurobuddha_pandaapps_mainactivity_mainactivity_onaction",
+      "app_src_main_java_com_eurobuddha_pandaapps_mainactivity_mainactivity_setbutton",
+      "app_src_main_java_com_eurobuddha_pandaapps_mainactivity_mainactivity_toast"
+    ],
+    "4": [
+      "app_src_main_java_com_eurobuddha_pandaapps_appentry",
+      "app_src_main_java_com_eurobuddha_pandaapps_appentry_appentry_from",
+      "app_src_main_java_com_eurobuddha_pandaapps_catalog",
+      "app_src_main_java_com_eurobuddha_pandaapps_catalog_catalog",
+      "app_src_main_java_com_eurobuddha_pandaapps_catalog_catalog_absurl",
+      "app_src_main_java_com_eurobuddha_pandaapps_catalog_catalog_catalog",
+      "app_src_main_java_com_eurobuddha_pandaapps_catalog_catalog_fetch",
+      "app_src_main_java_com_eurobuddha_pandaapps_catalog_catalog_friendly",
+      "app_src_main_java_com_eurobuddha_pandaapps_catalog_catalog_get",
+      "app_src_main_java_com_eurobuddha_pandaapps_catalog_cb",
+      "app_src_main_java_com_eurobuddha_pandaapps_catalog_cb_oncatalog",
+      "app_src_main_java_com_eurobuddha_pandaapps_catalog_cb_onerror",
+      "app_src_main_java_com_eurobuddha_pandaapps_catalog_src",
+      "app_src_main_java_com_eurobuddha_pandaapps_catalog_src_src",
+      "jsonobject"
+    ],
+    "5": [
+      "app_src_main_java_com_eurobuddha_pandaapps_imageloader",
+      "app_src_main_java_com_eurobuddha_pandaapps_imageloader_imageloader",
+      "app_src_main_java_com_eurobuddha_pandaapps_imageloader_imageloader_decode",
+      "app_src_main_java_com_eurobuddha_pandaapps_imageloader_imageloader_decodedatauri",
+      "app_src_main_java_com_eurobuddha_pandaapps_imageloader_imageloader_imageloader",
+      "app_src_main_java_com_eurobuddha_pandaapps_imageloader_imageloader_load",
+      "bitmap",
+      "imageview",
+      "lrucache"
+    ],
+    "6": [
+      "gradlew",
+      "gradlew__entry",
+      "gradlew_die",
+      "gradlew_save",
+      "gradlew_warn"
+    ],
+    "7": [
+      "app_src_main_java_com_eurobuddha_pandaapps_theme",
+      "app_src_main_java_com_eurobuddha_pandaapps_theme_theme",
+      "app_src_main_java_com_eurobuddha_pandaapps_theme_theme_theme"
+    ],
+    "8": [
+      "app_build"
+    ]
+  },
+  "cohesion": {
+    "0": 0.21052631578947367,
+    "1": 0.17647058823529413,
+    "2": 0.3161764705882353,
+    "3": 0.19166666666666668,
+    "4": 0.19047619047619047,
+    "5": 0.4166666666666667,
+    "6": 0.6,
+    "7": 0.6666666666666666,
+    "8": 1.0
+  },
+  "gods": [
+    {
+      "id": "app_src_main_java_com_eurobuddha_pandaapps_mainactivity_mainactivity",
+      "label": "MainActivity",
+      "degree": 23
+    },
+    {
+      "id": "app_src_main_java_com_eurobuddha_pandaapps_ui_ui",
+      "label": "Ui",
+      "degree": 10
+    },
+    {
+      "id": "app_src_main_java_com_eurobuddha_pandaapps_appentry_appentry",
+      "label": "AppEntry",
+      "degree": 9
+    },
+    {
+      "id": "app_src_main_java_com_eurobuddha_pandaapps_catalog_catalog",
+      "label": "Catalog",
+      "degree": 8
+    },
+    {
+      "id": "app_src_main_java_com_eurobuddha_pandaapps_imageloader_imageloader",
+      "label": "ImageLoader",
+      "degree": 7
+    },
+    {
+      "id": "app_src_main_java_com_eurobuddha_pandaapps_apkdownloader_apkdownloader",
+      "label": "ApkDownloader",
+      "degree": 5
+    },
+    {
+      "id": "app_src_main_java_com_eurobuddha_pandaapps_apkdownloader_cb",
+      "label": "Cb",
+      "degree": 5
+    },
+    {
+      "id": "app_src_main_java_com_eurobuddha_pandaapps_installer_installer",
+      "label": "Installer",
+      "degree": 5
+    },
+    {
+      "id": "app_src_main_java_com_eurobuddha_pandaapps_packageutil_packageutil",
+      "label": "PackageUtil",
+      "degree": 5
+    },
+    {
+      "id": "app_src_main_java_com_eurobuddha_pandaapps_catalog_cb",
+      "label": "Cb",
+      "degree": 4
+    }
+  ],
+  "surprises": [
+    {
+      "source": "MainActivity",
+      "target": "AppEntry",
+      "source_files": [
+        "app/src/main/java/com/eurobuddha/pandaapps/MainActivity.java",
+        "app/src/main/java/com/eurobuddha/pandaapps/AppEntry.java"
+      ],
+      "confidence": "EXTRACTED",
+      "relation": "references",
+      "why": "bridges separate communities"
+    }
+  ],
+  "tokens": {
+    "input": 0,
+    "output": 0
+  }
+}
