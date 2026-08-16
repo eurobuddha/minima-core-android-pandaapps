@@ -126,7 +126,17 @@ public class AppDetailActivity extends AppCompatActivity implements Downloads.Li
         body.addView(hero());
         addActionArea();
 
-        if (blurb.hasWarning()) body.addView(callout("NEW SIGNING KEY", blurb.warning));
+        if (PackageUtil.needsReinstall(this, app)) {
+            // Explain it here rather than let the system installer fail with a bare
+            // "App not installed" after the user has waited for a full download.
+            body.addView(callout("UNINSTALL THE OLD VERSION FIRST",
+                    "The copy you have was signed with our previous key, and Android will not "
+                    + "replace it — the install fails with no explanation. Uninstall it, then "
+                    + "install again. Your coins are safe: they live on the chain and in your "
+                    + "node's seed, not in the app. Minima apps re-pair with the node afterwards."));
+        } else if (blurb.hasWarning()) {
+            body.addView(callout("NEW SIGNING KEY", blurb.warning));
+        }
 
         if (blurb.hasLead()) {
             body.addView(sectionHeading("ABOUT"));
@@ -187,7 +197,10 @@ public class AppDetailActivity extends AppCompatActivity implements Downloads.Li
         // so an update routes through Downloads for a manual install. A FIRST install is fine
         // through the in-app installer — signatures only block the in-place update.
         boolean official = !"PandaApps".equals(app.source);
-        final String base = !isApk ? "Get"
+        // A copy signed with our old key can never be replaced in place, so offer the only thing
+        // that actually works instead of an Update that is guaranteed to fail after downloading.
+        final String base = PackageUtil.needsReinstall(this, app) ? "Uninstall old version"
+                : !isApk ? "Get"
                 : (installed && !update) ? "Open"
                 : (official && installed ? "Download" : (installed ? "Update" : "Install"));
 
@@ -206,7 +219,11 @@ public class AppDetailActivity extends AppCompatActivity implements Downloads.Li
 
         String state;
         int colour = Theme.DIM;
-        if (!isApk) {
+        if (PackageUtil.needsReinstall(this, app)) {
+            String v = PackageUtil.installedVersionName(this, app.packageId);
+            state = "Installed v" + (v == null ? "?" : v) + "  ·  signed with the old key";
+            colour = AMBER;
+        } else if (!isApk) {
             state = "Opens in your browser";
         } else if (!installed) {
             state = "Not installed";
@@ -403,6 +420,12 @@ public class AppDetailActivity extends AppCompatActivity implements Downloads.Li
     // ---------------------------------------------------------------- actions
 
     private void onAction(String label) {
+        if ("Uninstall old version".equals(label)) {
+            // onResume re-renders, so the button becomes Install as soon as the user comes back.
+            try { startActivity(PackageUtil.uninstallIntent(app.packageId)); }
+            catch (Exception e) { toast("Couldn't open the uninstaller — remove it from Settings → Apps"); }
+            return;
+        }
         if ("Open".equals(label)) {
             Intent i = PackageUtil.launchIntent(this, app.packageId);
             try {

@@ -5,10 +5,48 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <!-- Install downloaded APKs via the system package installer (the user grants this per-app) -->
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
-    <!-- Read installed versions of catalog apps to show Install / Update / Open. A sideloaded app
-         store legitimately needs this; the catalog package set isn't known at build time. -->
-    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES"
-        tools:ignore="QueryAllPackagesPermission" />
+    <!-- Package visibility, to show Install / Update / Open and to launch an installed app.
+         This was QUERY_ALL_PACKAGES. Together with REQUEST_INSTALL_PACKAGES above, that pair is the
+         fingerprint Play Protect scores hardest against — an app that can enumerate everything
+         installed AND install more is what a dropper looks like — and it was blocking real installs
+         with "Harmful app blocked". We never actually enumerate: PackageUtil only ever asks about a
+         named package, so an explicit list is enough and asks for far less.
+
+         Regenerate from the catalog with tools/sync-queries.py at each release. A catalog app added
+         AFTER this build is simply not visible to us and shows as "Not installed" until PandaApps
+         itself updates — wrong, but harmless, and it still installs correctly. -->
+    <queries>
+        <package android:name="com.eurobuddha.atomix" />
+        <package android:name="com.eurobuddha.blockexplorer" />
+        <package android:name="com.eurobuddha.brainwallet" />
+        <package android:name="com.eurobuddha.casino" />
+        <package android:name="com.eurobuddha.entropy" />
+        <package android:name="com.eurobuddha.ethwallet" />
+        <package android:name="com.eurobuddha.expert" />
+        <package android:name="com.eurobuddha.faucet" />
+        <package android:name="com.eurobuddha.filez" />
+        <package android:name="com.eurobuddha.futurecash" />
+        <package android:name="com.eurobuddha.history" />
+        <package android:name="com.eurobuddha.keyreuses" />
+        <package android:name="com.eurobuddha.mail" />
+        <package android:name="com.eurobuddha.maxima.app" />
+        <package android:name="com.eurobuddha.merchinbox" />
+        <package android:name="com.eurobuddha.merchshop" />
+        <package android:name="com.eurobuddha.merchstudio" />
+        <package android:name="com.eurobuddha.nftwallet" />
+        <package android:name="com.eurobuddha.openly" />
+        <package android:name="com.eurobuddha.pandaapps" />
+        <package android:name="com.eurobuddha.pandadex" />
+        <package android:name="com.eurobuddha.pandapools" />
+        <package android:name="com.eurobuddha.salon" />
+        <package android:name="com.eurobuddha.statenft" />
+        <package android:name="com.eurobuddha.terminalide" />
+        <package android:name="com.eurobuddha.utxo" />
+        <package android:name="com.eurobuddha.vestr" />
+        <package android:name="com.eurobuddha.wallet" />
+        <package android:name="org.minimarex.minimacore" />
+        <package android:name="org.minimarex.terminal" />
+    </queries>
 
     <!-- allowBackup=false: the whole apks/ fleet was scaffolded with allowBackup="true" and empty backup
          rules, so Android Auto Backup uploaded each app's entire data directory to the user's cloud and

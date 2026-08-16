@@ -42,6 +42,10 @@ public class MainActivity extends AppCompatActivity implements Downloads.Listene
     // into system_server, and this screen asks about every app in the catalog twice per pass.
     private final Map<String, Long> installedCodes = new HashMap<>();
 
+    // Packages installed under our OLD signing key, which Android will not let us replace in place.
+    // Snapshotted in the same pass — reading a signing certificate is another IPC per package.
+    private final java.util.Set<String> staleKey = new java.util.HashSet<>();
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -113,9 +117,11 @@ public class MainActivity extends AppCompatActivity implements Downloads.Listene
         // One PackageManager lookup per app for the whole pass, rather than one in hasUpdate() and
         // another in every bindRow().
         installedCodes.clear();
+        staleKey.clear();
         for (AppEntry a : apps) {
             if (a.isApk() && !installedCodes.containsKey(a.packageId)) {
                 installedCodes.put(a.packageId, PackageUtil.installedVersionCode(this, a.packageId));
+                if (PackageUtil.needsReinstall(this, a)) staleKey.add(a.packageId);
             }
         }
 
@@ -265,6 +271,15 @@ public class MainActivity extends AppCompatActivity implements Downloads.Listene
         long inst = installedCode(app);
         boolean installed = inst >= 0;
         boolean update = installed && app.versionCode > inst;
+
+        if (staleKey.contains(app.packageId)) {
+            // Android cannot replace this in place, so say so here rather than let the user find out
+            // from a bare "App not installed" at the end of a download.
+            sub.setText("Uninstall the old version to update");
+            sub.setTextColor(0xFFE0A93A);
+            showChip(chip, "ACTION");
+            return;
+        }
 
         if (update) {
             String v = PackageUtil.installedVersionName(this, app.packageId);
