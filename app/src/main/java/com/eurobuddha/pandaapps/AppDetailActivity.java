@@ -185,7 +185,11 @@ public class AppDetailActivity extends AppCompatActivity implements Downloads.Li
     private void addActionArea() {
         Downloads.State d = Downloads.get(app.packageId);
         if (d != null && d.running) {
-            body.addView(progressPanel(d));
+            body.addView(progressPanel("Downloading", d.percent));
+            return;
+        }
+        if (d != null && d.exporting) {
+            body.addView(progressPanel("Saving to Downloads", -1));
             return;
         }
 
@@ -199,9 +203,12 @@ public class AppDetailActivity extends AppCompatActivity implements Downloads.Li
         boolean official = !"PandaApps".equals(app.source);
         // A copy signed with our old key can never be replaced in place, so offer the only thing
         // that actually works instead of an Update that is guaranteed to fail after downloading.
+        // PandaGet can't open the installer, so every install-shaped action becomes "Download" —
+        // still the verified cache pipeline, just handed off to Downloads instead of the installer.
         final String base = PackageUtil.needsReinstall(this, app) ? "Uninstall old version"
                 : !isApk ? "Get"
                 : (installed && !update) ? "Open"
+                : BuildConfig.DOWNLOAD_ONLY ? "Download"
                 : (official && installed ? "Download" : (installed ? "Update" : "Install"));
 
         boolean accent = !base.equals("Open");
@@ -239,6 +246,31 @@ public class AppDetailActivity extends AppCompatActivity implements Downloads.Li
         st.setPadding(0, Ui.dp(this, 8), 0, 0);
         body.addView(st);
 
+        // PandaGet: the copy in Downloads IS the deliverable, so say where it went and what to do
+        // next. alreadySaved() keeps the message across process death, but only while it's still
+        // useful — once the app is installed and current, the leftover file is history.
+        boolean savedNow = d != null && d.saved;
+        boolean savedEarlier = BuildConfig.DOWNLOAD_ONLY && isApk && !(installed && !update)
+                && ApkExporter.alreadySaved(this, app);
+        if (savedNow || savedEarlier) {
+            TextView savedLine = Ui.text(this,
+                    "Saved to Downloads — open it from your Files app to install",
+                    Theme.GREEN, 12, false);
+            savedLine.setGravity(android.view.Gravity.CENTER_HORIZONTAL);
+            savedLine.setPadding(0, Ui.dp(this, 6), 0, 0);
+            body.addView(savedLine);
+
+            Button openDl = Ui.button(this, "Open Downloads", Theme.PANEL2, Theme.TEXT);
+            openDl.setTextSize(13);
+            openDl.setPadding(Ui.dp(this, 16), Ui.dp(this, 12), Ui.dp(this, 16), Ui.dp(this, 12));
+            LinearLayout.LayoutParams olp = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+            olp.topMargin = Ui.dp(this, 10);
+            openDl.setLayoutParams(olp);
+            openDl.setOnClickListener(v -> openDownloads());
+            body.addView(openDl);
+        }
+
         if (d != null && d.error != null) {
             TextView err = Ui.text(this, d.error, ERROR, 12, false);
             err.setGravity(android.view.Gravity.CENTER_HORIZONTAL);
@@ -268,7 +300,7 @@ public class AppDetailActivity extends AppCompatActivity implements Downloads.Li
         body.addView(src);
     }
 
-    private LinearLayout progressPanel(Downloads.State d) {
+    private LinearLayout progressPanel(String title, int percent) {
         LinearLayout p = Ui.col(this);
         p.setBackground(Ui.rounded(Theme.PANEL, Theme.BORDER, 10, this));
         int pad = Ui.dp(this, 14);
@@ -279,22 +311,22 @@ public class AppDetailActivity extends AppCompatActivity implements Downloads.Li
         p.setLayoutParams(lp);
 
         LinearLayout top = Ui.row(this);
-        TextView label = Ui.text(this, "Downloading", Theme.TEXT, 13, true);
+        TextView label = Ui.text(this, title, Theme.TEXT, 13, true);
         label.setLayoutParams(new LinearLayout.LayoutParams(
                 0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
         top.addView(label);
-        progressPct = Ui.text(this, d.percent < 0 ? "…" : d.percent + "%", Theme.ACCENT, 13, true);
+        progressPct = Ui.text(this, percent < 0 ? "…" : percent + "%", Theme.ACCENT, 13, true);
         top.addView(progressPct);
         p.addView(top);
 
         ProgressBar bar = new ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal);
         progressBar = bar;
         bar.setMax(100);
-        if (d.percent < 0) {
+        if (percent < 0) {
             bar.setIndeterminate(true);
         } else {
             bar.setIndeterminate(false);
-            bar.setProgress(d.percent);
+            bar.setProgress(percent);
         }
         LinearLayout.LayoutParams blp = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
@@ -434,7 +466,19 @@ public class AppDetailActivity extends AppCompatActivity implements Downloads.Li
             return;
         }
         if ("Get".equals(label))      { openInBrowser(app.file); return; }
-        if ("Download".equals(label)) { downloadToDownloads(); return; }
+        if ("Download".equals(label)) {
+            if (BuildConfig.DOWNLOAD_ONLY) {
+                // PandaGet: same verified pipeline as Install — cache + SHA-256 — then the bytes
+                // are exported to Downloads instead of handed to the installer. This also gives
+                // the foreign-signed case a hash check DownloadManager never did.
+                if (Downloads.isRunning(app.packageId)) return;
+                if (app.file == null || app.file.isEmpty()) { toast("No download URL for " + app.name); return; }
+                Downloads.start(this, app);
+            } else {
+                downloadToDownloads();
+            }
+            return;
+        }
 
         // Install / Update — stream to cache, verify, then hand to the system installer.
         if (Downloads.isRunning(app.packageId)) return;
@@ -445,6 +489,15 @@ public class AppDetailActivity extends AppCompatActivity implements Downloads.Li
             return;
         }
         Downloads.start(this, app);
+    }
+
+    /** Show the system Downloads view so the freshly saved APK is one tap from the installer. */
+    private void openDownloads() {
+        try {
+            startActivity(new Intent(DownloadManager.ACTION_VIEW_DOWNLOADS));
+        } catch (Exception e) {
+            toast("Open your Files app and look in Downloads");
+        }
     }
 
     /** Open a non-app download (a skill zip, a desktop build) in the browser, which handles the

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- PandaGet: the download-only edition. Play Protect scores REQUEST_INSTALL_PACKAGES on our
+     young signing certificate as a dropper and hard-blocks the store itself, so this flavor
+     removes the permission entirely — the merged manifest is INTERNET-only (plus the benign
+     package-visibility <queries> list from main/). The verified APK is saved to the user's
+     Downloads instead, and they install it from the Files app. -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <uses-permission
+        android:name="android.permission.REQUEST_INSTALL_PACKAGES"
+        tools:node="remove" />
+</manifest>

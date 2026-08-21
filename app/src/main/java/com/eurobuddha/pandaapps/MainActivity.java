@@ -251,6 +251,20 @@ public class MainActivity extends AppCompatActivity implements Downloads.Listene
             showChip(chip, d.percent < 0 ? "…" : d.percent + "%");
             return;
         }
+        // PandaGet only: the verified bytes are being copied into public Downloads, or already
+        // landed there. Full never sets these flags, so no flavor branch is needed.
+        if (d != null && d.exporting) {
+            sub.setText("Saving to Downloads…");
+            sub.setTextColor(Theme.DIM);
+            showChip(chip, "…");
+            return;
+        }
+        if (d != null && d.saved) {
+            sub.setText("Saved to Downloads");
+            sub.setTextColor(Theme.GREEN);
+            hideChip(chip);
+            return;
+        }
         // Deliberately no branch for d.installing: once the APK has reached the system installer,
         // the package manager is the only honest answer about whether it landed, and that flag is
         // not cleared until this screen resumes.

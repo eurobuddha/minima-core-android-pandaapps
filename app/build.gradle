@@ -10,10 +10,32 @@ android {
         applicationId "com.eurobuddha.pandaapps"
         minSdk 28
         targetSdk 35
-        versionCode 300
-        versionName "0.3.0"
+        versionCode 400
+        versionName "0.4.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    buildFeatures {
+        buildConfig true    // AGP 8 stopped generating BuildConfig by default; DOWNLOAD_ONLY needs it
+    }
+
+    // Two editions from one codebase. "full" is PandaApps as it has always been. "pandaget" exists
+    // because Play Protect hard-blocks REQUEST_INSTALL_PACKAGES on our young signing key as a
+    // dropper: it drops that permission entirely (see src/pandaget/AndroidManifest.xml) and saves
+    // the verified APK into the user's Downloads instead of opening the installer.
+    flavorDimensions = ["dist"]
+    productFlavors {
+        full {
+            dimension "dist"
+            buildConfigField "boolean", "DOWNLOAD_ONLY", "false"
+        }
+        pandaget {
+            dimension "dist"
+            applicationId "com.eurobuddha.pandaget"
+            minSdk 29           // MediaStore.Downloads — saving needs no storage permission on 29+
+            buildConfigField "boolean", "DOWNLOAD_ONLY", "true"
+        }
     }
     signingConfigs {
         // Minima family release key. Credentials come from ~/.gradle/gradle.properties

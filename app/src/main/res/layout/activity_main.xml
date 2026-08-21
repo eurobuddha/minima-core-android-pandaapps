@@ -26,7 +26,7 @@
                 android:id="@+id/title"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="PandaApps"
+                android:text="@string/app_name"
                 android:textColor="@color/accent"
                 android:textStyle="bold"
                 android:textSize="20sp" />

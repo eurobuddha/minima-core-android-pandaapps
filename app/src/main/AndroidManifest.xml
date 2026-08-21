@@ -37,6 +37,7 @@
         <package android:name="com.eurobuddha.openly" />
         <package android:name="com.eurobuddha.pandaapps" />
         <package android:name="com.eurobuddha.pandadex" />
+        <package android:name="com.eurobuddha.pandaget" />
         <package android:name="com.eurobuddha.pandapools" />
         <package android:name="com.eurobuddha.salon" />
         <package android:name="com.eurobuddha.statenft" />

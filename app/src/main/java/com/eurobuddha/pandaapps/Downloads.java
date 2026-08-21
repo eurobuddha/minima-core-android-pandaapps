@@ -34,6 +34,12 @@ public final class Downloads {
         /** Handed off to the system installer. Guards the cache prune only — never drives row text,
          *  because once the installer has the APK, PackageUtil is what says whether it landed. */
         public boolean installing;
+        /** Download-only flavor: the verified APK is being copied into public Downloads. Guards the
+         *  cache prune like {@link #installing}, and drives a "Saving to Downloads…" state. */
+        public boolean exporting;
+        /** Download-only flavor: the copy landed in Downloads. Transient — cleared when the list
+         *  resumes; the detail screen's persistent signal is {@link ApkExporter#alreadySaved}. */
+        public boolean saved;
         public String error;        // last failure, or null
     }
 
@@ -70,7 +76,10 @@ public final class Downloads {
      */
     public static synchronized void clearSettled() {
         java.util.Iterator<Map.Entry<String, State>> it = STATES.entrySet().iterator();
-        while (it.hasNext()) if (!it.next().getValue().running) it.remove();
+        while (it.hasNext()) {
+            State s = it.next().getValue();
+            if (!s.running && !s.exporting) it.remove();
+        }
     }
 
     /**
@@ -79,7 +88,7 @@ public final class Downloads {
      * the installer is still reading through its content:// grant.
      */
     public static synchronized boolean anyBusy() {
-        for (State s : STATES.values()) if (s.running || s.installing) return true;
+        for (State s : STATES.values()) if (s.running || s.installing || s.exporting) return true;
         return false;
     }
 
@@ -112,6 +121,32 @@ public final class Downloads {
             }
 
             @Override public void onComplete(File apk) {
+                if (BuildConfig.DOWNLOAD_ONLY) {
+                    // PandaGet has no installer permission: the hand-off is a verified copy into
+                    // the user's Downloads, then they install it from the Files app themselves.
+                    synchronized (Downloads.class) {
+                        State s = STATES.get(pkg);
+                        if (s != null) { s.running = false; s.exporting = true; }
+                    }
+                    notifyChanged();
+                    ApkExporter.save(ctx, app, apk, new ApkExporter.Cb() {
+                        @Override public void onSaved() {
+                            synchronized (Downloads.class) {
+                                State s = STATES.get(pkg);
+                                if (s != null) { s.exporting = false; s.saved = true; }
+                            }
+                            notifyChanged();
+                        }
+                        @Override public void onError(String message) {
+                            synchronized (Downloads.class) {
+                                State s = STATES.get(pkg);
+                                if (s != null) { s.exporting = false; s.error = message; }
+                            }
+                            notifyChanged();
+                        }
+                    });
+                    return;
+                }
                 boolean opened = Installer.install(ctx, apk);
                 synchronized (Downloads.class) {
                     State s = STATES.get(pkg);
