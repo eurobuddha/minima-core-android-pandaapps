@@ -33,6 +33,7 @@ public final class Groups {
     private static final Map<String, String> MAP = new HashMap<>();
     static {
         MAP.put("core",      "GET STARTED");
+        MAP.put("store",     "GET STARTED"); // the stores themselves lead the list (catalog order)
         MAP.put("wallet",    "WALLETS");
         MAP.put("finance",   "FINANCE & TRADING");
         MAP.put("shopping",  "SHOP & SELL");
