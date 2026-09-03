@@ -164,7 +164,23 @@ public class AppDetailActivity extends AppCompatActivity implements Downloads.Li
         LinearLayout col = Ui.col(this);
         col.setLayoutParams(new LinearLayout.LayoutParams(
                 0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
-        col.addView(Ui.text(this, app.name, Theme.TEXT, 20, true));
+        if (app.highlight.isEmpty()) {
+            col.addView(Ui.text(this, app.name, Theme.TEXT, 20, true));
+        } else {
+            LinearLayout nameRow = Ui.row(this);
+            nameRow.setGravity(android.view.Gravity.CENTER_VERTICAL);
+            TextView nm = Ui.text(this, app.name, Theme.TEXT, 20, true);
+            nm.setLayoutParams(new LinearLayout.LayoutParams(
+                    0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
+            nameRow.addView(nm);
+            TextView hot = Ui.badge(this, app.highlight, Theme.ON_ACCENT, Theme.ACCENT);
+            LinearLayout.LayoutParams hlp = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+            hlp.leftMargin = Ui.dp(this, 8);
+            hot.setLayoutParams(hlp);
+            nameRow.addView(hot);
+            col.addView(nameRow);
+        }
 
         String line = "v" + app.version;
         if (!app.category.isEmpty()) line += "  ·  " + app.category;

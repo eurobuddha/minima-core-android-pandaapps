@@ -208,6 +208,11 @@ public class MainActivity extends AppCompatActivity implements Downloads.Listene
         card.setGravity(android.view.Gravity.CENTER_VERTICAL);
         int p = Ui.dp(this, 10);
         card.setPadding(p, p, p, p);
+        if (!app.highlight.isEmpty()) {
+            card.setBackground(Ui.glowCard(this));
+            int ph = Ui.dp(this, 13);   // halo inset + normal padding, so content lines up
+            card.setPadding(ph, ph, ph, ph);
+        }
         card.setForeground(Ui.ripple(this));
         card.setOnClickListener(v -> AppDetailActivity.open(this, app));
 
@@ -225,7 +230,21 @@ public class MainActivity extends AppCompatActivity implements Downloads.Listene
         TextView name = Ui.text(this, app.name, Theme.TEXT, 15, true);
         name.setMaxLines(1);
         name.setEllipsize(android.text.TextUtils.TruncateAt.END);
-        mid.addView(name);
+        if (app.highlight.isEmpty()) {
+            mid.addView(name);
+        } else {
+            LinearLayout nameRow = Ui.row(this);
+            name.setLayoutParams(new LinearLayout.LayoutParams(
+                    0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
+            nameRow.addView(name);
+            TextView hot = Ui.badge(this, app.highlight, Theme.ON_ACCENT, Theme.ACCENT);
+            LinearLayout.LayoutParams hlp = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+            hlp.leftMargin = Ui.dp(this, 8);
+            hot.setLayoutParams(hlp);
+            nameRow.addView(hot);
+            mid.addView(nameRow);
+        }
         final TextView sub = Ui.text(this, "", Theme.DIM, 11, false);
         sub.setPadding(0, Ui.dp(this, 3), 0, 0);
         mid.addView(sub);

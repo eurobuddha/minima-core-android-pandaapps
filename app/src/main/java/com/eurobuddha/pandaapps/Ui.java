@@ -95,6 +95,24 @@ public final class Ui {
         return t;
     }
 
+    /** Glowing card background for a catalog-highlighted entry: a soft accent halo around a
+     *  warm-tinted panel with a full accent stroke. The halo is drawn by the layer itself, so
+     *  no elevation/shadow is involved and the dark theme stays flat everywhere else. */
+    public static android.graphics.drawable.Drawable glowCard(Context c) {
+        GradientDrawable halo = new GradientDrawable();
+        halo.setColor(0x2EF9A03F);
+        halo.setCornerRadius(dp(c, 13));
+        GradientDrawable core = new GradientDrawable();
+        core.setColor(0xFF241C10);
+        core.setCornerRadius(dp(c, 10));
+        core.setStroke(dp(c, 1.5f), Theme.ACCENT);
+        android.graphics.drawable.LayerDrawable l = new android.graphics.drawable.LayerDrawable(
+                new android.graphics.drawable.Drawable[]{halo, core});
+        int i = dp(c, 3);
+        l.setLayerInset(1, i, i, i, i);
+        return l;
+    }
+
     public static TextView badge(Context c, String s, int fg, int bg) {
         TextView t = text(c, s.toUpperCase(), fg, 9, true);
         t.setLetterSpacing(0.08f);

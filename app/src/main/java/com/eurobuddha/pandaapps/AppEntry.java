@@ -18,6 +18,7 @@ public class AppEntry {
     public String file;          // APK download URL
     public String sha256;        // lowercase hex SHA-256 of the APK (optional; verified if present)
     public String repo;          // public source repository (optional; shown as "View source code")
+    public String highlight;     // badge text (e.g. "Recommended"); non-empty = glowing row (optional)
 
     public static AppEntry from(JSONObject o) {
         AppEntry a = new AppEntry();
@@ -32,6 +33,7 @@ public class AppEntry {
         a.file        = o.optString("file", "");
         a.sha256      = o.optString("sha256", "").trim().toLowerCase();
         a.repo        = o.optString("repo", "").trim();
+        a.highlight   = o.optString("highlight", "").trim();
         return a;
     }
 
@@ -57,6 +59,7 @@ public class AppEntry {
             o.put("file", file);
             o.put("sha256", sha256);
             o.put("repo", repo);
+            o.put("highlight", highlight);
         } catch (JSONException ignored) {}
         return o;
     }
