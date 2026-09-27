@@ -41,6 +41,9 @@ public final class Downloads {
          *  resumes; the detail screen's persistent signal is {@link ApkExporter#alreadySaved}. */
         public boolean saved;
         public String error;        // last failure, or null
+        /** The PackageInstaller session backing {@link #installing}, or -1. Ours, so it can be abandoned. */
+        public int sessionId = -1;
+        public long installStartedAt;
     }
 
     private static final Map<String, State> STATES = new HashMap<>();
@@ -147,16 +150,22 @@ public final class Downloads {
                     });
                     return;
                 }
-                boolean opened = Installer.install(ctx, apk);
+                // A session WE own, so the outcome comes back to InstallReceiver. The old hand-off
+                // returned "did startActivity throw", which is not an install result — a wedged system
+                // installer left this row saying "Installing…" forever with nothing able to clear it.
+                int sessionId = Installer.install(ctx, apk, pkg);
                 synchronized (Downloads.class) {
                     State s = STATES.get(pkg);
                     if (s != null) {
                         s.running = false;
-                        s.installing = opened;
-                        if (!opened) s.error = "Couldn't open the installer";
+                        s.installing = sessionId >= 0;
+                        s.sessionId = sessionId;
+                        s.installStartedAt = System.currentTimeMillis();
+                        if (sessionId < 0) s.error = "Couldn't start the install";
                     }
                 }
                 notifyChanged();
+                if (sessionId >= 0) armInstallTimeout(ctx, pkg, sessionId);
             }
 
             @Override public void onError(String message) {
@@ -168,6 +177,45 @@ public final class Downloads {
             }
         });
     }
+
+    /**
+     * A session reached a terminal state (or timed out). The ONLY way out of "Installing…" — every path in
+     * {@link InstallReceiver} ends here, because a row that waits forever is the bug this replaced.
+     */
+    public static void installFinished(String pkg, boolean ok, String error) {
+        if (pkg == null) return;
+        synchronized (Downloads.class) {
+            State s = STATES.get(pkg);
+            if (s == null) return;
+            s.installing = false;
+            s.sessionId = -1;
+            s.error = ok ? null : (error == null ? "Install failed." : error);
+        }
+        notifyChanged();
+    }
+
+    /** Abandon and report anything still pending after {@link Installer#TIMEOUT_MS}, so a silent wedge in
+     *  the system installer surfaces as a real error the user can act on instead of an endless spinner. */
+    private static void armInstallTimeout(final Context ctx, final String pkg, final int sessionId) {
+        final Context app = ctx.getApplicationContext();
+        TIMEOUTS.postDelayed(new Runnable() {
+            @Override public void run() {
+                boolean stillWaiting;
+                synchronized (Downloads.class) {
+                    State s = STATES.get(pkg);
+                    stillWaiting = s != null && s.installing && s.sessionId == sessionId;
+                }
+                if (!stillWaiting) return;
+                Installer.abandon(app, sessionId);
+                installFinished(pkg, false,
+                        "The installer did not respond. This is usually Play Protect holding the install — "
+                        + "retry, or turn off Play Protect scanning for sideloaded apps, then retry.");
+            }
+        }, Installer.TIMEOUT_MS);
+    }
+
+    private static final android.os.Handler TIMEOUTS =
+            new android.os.Handler(android.os.Looper.getMainLooper());
 
     private static void notifyChanged() {
         List<Listener> copy;

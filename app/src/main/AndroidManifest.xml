@@ -91,5 +91,12 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths" />
         </provider>
+
+        <!-- Where a PackageInstaller session reports its outcome. Not exported: only the system's
+             PendingIntent targets it, and an exported receiver would let any app spoof an install result. -->
+        <receiver
+            android:name=".InstallReceiver"
+            android:exported="false" />
+
     </application>
 </manifest>
