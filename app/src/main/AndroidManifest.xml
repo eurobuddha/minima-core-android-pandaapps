@@ -45,8 +45,10 @@
         <package android:name="com.eurobuddha.utxo" />
         <package android:name="com.eurobuddha.vestr" />
         <package android:name="com.eurobuddha.wallet" />
-        <package android:name="org.minimarex.minimacore" />
-        <package android:name="org.minimarex.terminal" />
+        <package android:name="com.eurobuddha.minimacore" />
+        <package android:name="com.eurobuddha.minimablock" />
+        <package android:name="com.eurobuddha.pandamonium" />
+        <package android:name="com.eurobuddha.terminal" />
     </queries>
 
     <!-- allowBackup=false: the whole apks/ fleet was scaffolded with allowBackup="true" and empty backup
