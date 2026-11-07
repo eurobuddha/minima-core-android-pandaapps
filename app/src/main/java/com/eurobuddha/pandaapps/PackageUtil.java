@@ -82,6 +82,44 @@ public final class PackageUtil {
         return cert != null && !FAMILY_CERT_SHA256.equalsIgnoreCase(cert);
     }
 
+    /**
+     * SECURITY (review 7 Nov 2026): the downloaded APK's sha256 comes from the same catalog as its URL, so a catalog
+     * compromise (GitHub, the eurobuddha.com box, IPNS) could ship a look-alike signed with another key. Android only
+     * blocks that for an in-place UPDATE; a fresh install would go through, and the user then gives it ADMIN on their
+     * node. Before installing: the archive must be the package the row names, and anything in our com.eurobuddha.*
+     * namespace (or listed as ours) must carry the Minima Family certificate. Returns the refusal, or null when fine.
+     */
+    public static String archiveSignerProblem(Context ctx, java.io.File apk, AppEntry app, String packageId) {
+        android.content.pm.PackageManager pm = ctx.getPackageManager();
+        android.content.pm.PackageInfo pi = null;
+        try { pi = pm.getPackageArchiveInfo(apk.getPath(), android.content.pm.PackageManager.GET_SIGNING_CERTIFICATES); } catch (Exception ignored) {}
+        android.content.pm.Signature[] sigs = null;
+        if (pi != null && pi.signingInfo != null) sigs = pi.signingInfo.getApkContentsSigners();
+        if (sigs == null || sigs.length == 0) {   // some releases leave signingInfo empty for archives
+            try {
+                @SuppressWarnings("deprecation") android.content.pm.PackageInfo old =
+                        pm.getPackageArchiveInfo(apk.getPath(), android.content.pm.PackageManager.GET_SIGNATURES);
+                if (old != null) { if (pi == null) pi = old; sigs = old.signatures; }
+            } catch (Exception ignored) {}
+        }
+        String archivePkg = pi == null ? null : pi.packageName;
+        boolean ours = (packageId != null && packageId.startsWith("com.eurobuddha."))
+                || (archivePkg != null && archivePkg.startsWith("com.eurobuddha."))
+                || (app != null && "PandaApps".equals(app.source));
+        if (archivePkg == null) return ours ? "the downloaded file is not a readable app" : null;
+        if (packageId != null && !packageId.isEmpty() && !packageId.equals(archivePkg))
+            return "the download is " + archivePkg + ", not " + packageId;
+        if (!ours) return null;
+        if (sigs == null || sigs.length == 0) return "the download carries no signature";
+        try {
+            byte[] h = java.security.MessageDigest.getInstance("SHA-256").digest(sigs[0].toByteArray());
+            StringBuilder sb = new StringBuilder(h.length * 2);
+            for (byte x : h) sb.append(Character.forDigit((x >> 4) & 0xF, 16)).append(Character.forDigit(x & 0xF, 16));
+            if (sigs.length == 1 && FAMILY_CERT_SHA256.equalsIgnoreCase(sb.toString())) return null;
+            return "the download is not signed with the Minima Family key (" + sb + ")";
+        } catch (Exception e) { return "the download's signature could not be checked"; }
+    }
+
     /** The system uninstall prompt for a package. */
     public static Intent uninstallIntent(String pkg) {
         return new Intent(Intent.ACTION_DELETE, android.net.Uri.parse("package:" + pkg));

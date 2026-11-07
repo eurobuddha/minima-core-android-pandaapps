@@ -124,6 +124,17 @@ public final class Downloads {
             }
 
             @Override public void onComplete(File apk) {
+                // SECURITY (review 7 Nov 2026): never install or hand over a family app that is not family-signed
+                String refuse = PackageUtil.archiveSignerProblem(ctx, apk, app, pkg);
+                if (refuse != null) {
+                    try { apk.delete(); } catch (Exception ignored) {}
+                    synchronized (Downloads.class) {
+                        State s = STATES.get(pkg);
+                        if (s != null) { s.running = false; s.error = "Refused: " + refuse; }
+                    }
+                    notifyChanged();
+                    return;
+                }
                 if (BuildConfig.DOWNLOAD_ONLY) {
                     // PandaGet has no installer permission: the hand-off is a verified copy into
                     // the user's Downloads, then they install it from the Files app themselves.
