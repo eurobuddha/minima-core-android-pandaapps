@@ -20,12 +20,14 @@
         <package android:name="com.eurobuddha.blockexplorer" />
         <package android:name="com.eurobuddha.brainwallet" />
         <package android:name="com.eurobuddha.casino" />
+        <package android:name="com.eurobuddha.dexicon" />
         <package android:name="com.eurobuddha.entropy" />
         <package android:name="com.eurobuddha.ethwallet" />
         <package android:name="com.eurobuddha.expert" />
         <package android:name="com.eurobuddha.faucet" />
         <package android:name="com.eurobuddha.filez" />
         <package android:name="com.eurobuddha.futurecash" />
+        <package android:name="com.eurobuddha.futurecashnext" />
         <package android:name="com.eurobuddha.history" />
         <package android:name="com.eurobuddha.keyreuses" />
         <package android:name="com.eurobuddha.mail" />
@@ -33,22 +35,23 @@
         <package android:name="com.eurobuddha.merchinbox" />
         <package android:name="com.eurobuddha.merchshop" />
         <package android:name="com.eurobuddha.merchstudio" />
+        <package android:name="com.eurobuddha.minimablock" />
+        <package android:name="com.eurobuddha.minimacore" />
+        <package android:name="com.eurobuddha.minimadocs" />
         <package android:name="com.eurobuddha.nftwallet" />
-        <package android:name="com.eurobuddha.openly" />
         <package android:name="com.eurobuddha.pandaapps" />
         <package android:name="com.eurobuddha.pandadex" />
         <package android:name="com.eurobuddha.pandaget" />
+        <package android:name="com.eurobuddha.pandamonium" />
         <package android:name="com.eurobuddha.pandapools" />
+        <package android:name="com.eurobuddha.parlons.cloud" />
         <package android:name="com.eurobuddha.salon" />
         <package android:name="com.eurobuddha.statenft" />
+        <package android:name="com.eurobuddha.terminal" />
         <package android:name="com.eurobuddha.terminalide" />
         <package android:name="com.eurobuddha.utxo" />
         <package android:name="com.eurobuddha.vestr" />
         <package android:name="com.eurobuddha.wallet" />
-        <package android:name="com.eurobuddha.minimacore" />
-        <package android:name="com.eurobuddha.minimablock" />
-        <package android:name="com.eurobuddha.pandamonium" />
-        <package android:name="com.eurobuddha.terminal" />
     </queries>
 
     <!-- allowBackup=false: the whole apks/ fleet was scaffolded with allowBackup="true" and empty backup

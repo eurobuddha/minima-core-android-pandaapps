@@ -396,7 +396,7 @@ public class AppDetailActivity extends AppCompatActivity implements Downloads.Li
         if (!app.category.isEmpty()) table.addView(detailRow("Category", app.category, false));
         // "Publisher", not "Source" — the source now means the code, linked above.
         if (!app.source.isEmpty()) table.addView(detailRow("Publisher", app.source, false));
-        if (!app.sha256.isEmpty()) table.addView(detailRow("SHA-256", shortHash(app.sha256), true));
+        if (!app.sha256.isEmpty()) table.addView(detailRow("SHA-256", app.sha256, true));
 
         body.addView(table);
     }
@@ -459,10 +459,6 @@ public class AppDetailActivity extends AppCompatActivity implements Downloads.Li
             r.setOnClickListener(x -> copyToClipboard(label, app.sha256));
         }
         return r;
-    }
-
-    private static String shortHash(String h) {
-        return h.length() <= 20 ? h : h.substring(0, 12) + "…" + h.substring(h.length() - 4);
     }
 
     // ---------------------------------------------------------------- actions
